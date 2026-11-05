@@ -14,7 +14,7 @@ const COVER = location.hash === '#cover';
 const stage = createStage(document.getElementById('film'));
 const { scene } = stage, C = stage.ctx;
 await loadFonts(); await document.fonts.load('500 40px Oswald');   // signs are drawn at load: fonts first
-scene.fog = new THREE.Fog('#0a0e18', 40, 140);
+scene.fog = new THREE.Fog('#1b2438', 60, 170);
 
 // ---------- word times ----------
 const nrm = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9:]/g, '').replace(/:$/, '');
@@ -65,14 +65,14 @@ const sombra2 = new Stickman({ body: '#2b2f38', outline: '#07080a', eyes: false,
 // ---------- the city (always in the scene, behind the apartment window) ----------
 const city = new THREE.Group(); scene.add(city);
 city.add(box(260, 0.1, 200, '#11141b', 0, -15.1, -80));
-const R = rng(31), WINS = [], LIT = new THREE.MeshBasicMaterial({ color: '#ffcf8a' }), DARK = mat('#0d1016');
+const R = rng(31), WINS = [], LIT = new THREE.MeshBasicMaterial({ color: '#ffcf8a' }), DARK = mat('#1c2230'), VELA = new THREE.MeshBasicMaterial({ color: '#6b3a12' });
 for (let i = 0; i < 26; i++) {
   const z = -14 - R() * 60, x = (R() - 0.5) * 90 + (i % 2 ? 6 : -6), floors = 5 + Math.floor(R() * 14);
-  const tw = tower({ floors, cols: 4 + Math.floor(R() * 3), w: 6 + R() * 5, d: 6, floorH: 2.8, color: ['#3a3f4b', '#4a4640', '#363b47'][i % 3], seed: 100 + i, litShare: 0.55 });
+  const tw = tower({ floors, cols: 4 + Math.floor(R() * 3), w: 6 + R() * 5, d: 6, floorH: 2.8, color: ['#4a5262', '#5a554d', '#46505f'][i % 3], seed: 100 + i, litShare: 0.55 });
   tw.position.set(x, -15, z); tw.rotation.y = (R() - 0.5) * 0.5; city.add(tw);
-  for (const wi of tw.userData.windows) { wi.mesh.material = LIT; WINS.push({ mesh: wi.mesh, on: wi.on, off: tApaga - 4.2 + (74 + z) / 13.5 + R() * 0.5 }); }
+  for (const wi of tw.userData.windows) { wi.mesh.material = LIT; WINS.push({ mesh: wi.mesh, on: wi.on, vela: R() < 0.07, off: z < -64 ? -1 : tApaga - 1.7 + (64 + z) / 50 * 1.9 + R() * 0.35 }); }   // far districts already dark at frame 0; the wave reaches us on "apaga"
 }
-function cityLights(t) { for (const wi of WINS) wi.mesh.material = wi.on && t < wi.off ? LIT : DARK; }
+function cityLights(t) { for (const wi of WINS) wi.mesh.material = wi.on && t < wi.off ? LIT : (wi.vela && t > wi.off + 0.6 ? VELA : DARK); }
 coldFill(scene, '#6a86c0', 0.75);
 
 // ---------- set: apartamento 32 (origin) ----------
@@ -260,7 +260,7 @@ const SHOTS = [
   } },
   { at: L0s - 0.05, f(t, u) {   // pela janela: São Paulo apaga em onda
     stage.use('apto'); hero.mesh.position.set(-1.1, 0, -1.6); poseHero(P.back, false);
-    stage.aim([-1.1, 1.55, -2.62], [lerp(-2, 2, ease(u / 2.5)), -4, -45], 74); return { bloom: 0.8 };
+    stage.aim([-1.1, 1.55, -2.62], [lerp(-6, 0, ease(u / 2.5)), 8, -60], 74); return { bloom: 0.8 };
   } },
   { at: S(1) - 0.05, f(t, u) {   // você vira para dentro, no escuro
     stage.use('apto'); hero.mesh.position.set(-1.0, 0, -1.7); poseHero(u < 0.6 ? P.back : P.scared, u >= 0.6);
@@ -456,7 +456,7 @@ function aptoLights(t) {
   const on = t < tApaga + 0.05; lampada.userData.light.intensity = on ? 7 : 0; lampada.userData.bulb.visible = on;
   if (t > S(5)) vela.userData.light.intensity = 2.6 + 0.35 * Math.sin(t * 13) + 0.2 * Math.sin(t * 29);
   const night = clamp((t - tApaga) / 1.2);
-  scene.background = new THREE.Color().lerpColors(new THREE.Color('#26203a'), new THREE.Color('#080b14'), night);
+  scene.background = new THREE.Color().lerpColors(new THREE.Color('#26203a'), new THREE.Color('#1b2438'), night);
 }
 
 window.seek = t => {
