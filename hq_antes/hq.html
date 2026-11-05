@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>Alerta SP - HQ Antes de tudo</title>
+<script type="importmap">{"imports":{"three":"../engine/vendor/three.module.js"}}</script>
+<style>@font-face{font-family:Oswald;font-weight:700;src:url(fonts/oswald-latin-700-normal.woff2)}@font-face{font-family:Oswald;font-weight:500;src:url(fonts/oswald-latin-500-normal.woff2)}@font-face{font-family:'JetBrains Mono';font-weight:700;src:url(fonts/jetbrains-mono-latin-700-normal.woff2)}@font-face{font-family:Bangers;font-weight:400;src:url(fonts/bangers-latin-400-normal.woff2)}@font-face{font-family:'Comic Neue';font-weight:700;src:url(fonts/comic-neue-latin-700-normal.woff2)}</style>
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+</head><body>
+<canvas id="film" width="1080" height="1920"></canvas>
+<script type="module">
+import { THREE, createStage, room, door, box, mat, wallWithHoles, practical, coldFill, accent, tower, Stickman,
+  hud, ruleSticker, endCard, phone, loadFonts, chunkCaptions, drawCaptions, clamp, lerp, ease, spring, rng } from '../engine/stage.js';
+
+const COVER = location.hash === '#cover';
+const stage = createStage(document.getElementById('film'));
+const { scene } = stage, C = stage.ctx;
+await loadFonts(); await document.fonts.load('500 40px Oswald');   // signs are drawn at load: fonts first
+scene.fog = new THREE.Fog('#1b2438', 60, 170);
+
+// no voice: a comic carousel, one slide per t = 0..5
+const tApaga = 1e9;
+
+// ---------- 2D helpers ----------
+function T(c, s, x, y, px, color, o = {}) {
+  c.font = `${o.w || 700} ${px}px ${o.mono ? '"JetBrains Mono"' : 'Oswald'}`; c.textAlign = o.align || 'center'; c.textBaseline = 'middle';
+  if (o.maxW) { const m = c.measureText(s).width; if (m > o.maxW) c.font = `${o.w || 700} ${Math.floor(px * o.maxW / m)}px ${o.mono ? '"JetBrains Mono"' : 'Oswald'}`; }
+  if (o.stroke) { c.lineJoin = 'round'; c.lineWidth = o.stroke; c.strokeStyle = '#0b0c0f'; c.strokeText(s, x, y); }
+  c.fillStyle = color; c.fillText(s, x, y);
+}
+function canvasTex(w, h, draw) {
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h; draw(cv.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+// a flat 2D prop on a camera-facing plane (same model in every shot)
+function flatProp(wm, hm, px, draw, o = {}) {
+  const tex = canvasTex(px, Math.round(px * hm / wm), draw);
+  const g = new THREE.PlaneGeometry(wm, hm); g.translate(0, hm / 2, 0);
+  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide, emissive: '#ffffff', emissiveMap: tex, emissiveIntensity: o.glow ?? 0.25, roughness: 1 }));
+  m.castShadow = true; m.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: tex, alphaTest: 0.5 });
+  if (o.billboard !== false) m.userData.billboard = cam => { const p = new THREE.Vector3(); cam.getWorldPosition(p); const q = new THREE.Vector3(); m.getWorldPosition(q); m.rotation.y = Math.atan2(p.x - q.x, p.z - q.z); };
+  return m;
+}
+function sign(wm, hm, px, draw, glow = 1) {
+  const tex = canvasTex(px, Math.round(px * hm / wm), draw);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(wm, hm), new THREE.MeshStandardMaterial({ map: tex, emissive: '#ffffff', emissiveMap: tex, emissiveIntensity: glow, roughness: 0.6 }));
+  return m;
+}
+const knockShake = (t, t0, n = 3, gap = 0.33) => { let s = 0; for (let k = 0; k < n; k++) { const d = t - (t0 + k * gap); if (d >= 0) s += Math.exp(-d * 18) * Math.sin(d * 90); } return s; };
+
+// ---------- cast ----------
+const hero = new Stickman({ mark: { type: 'band', color: '#e0342b' } });
+const jorge = new Stickman({ mark: { type: 'cap', color: '#e2a72e' }, height: 1.72 });
+const moca = new Stickman({ mark: { type: 'scarf', color: '#3d8bff' }, height: 1.66 });
+const vo = new Stickman({ mark: { type: 'shawl', color: '#8e5a9e' }, height: 1.52, body: '#ece6da' });
+const sombra1 = new Stickman({ body: '#2b2f38', outline: '#07080a', eyes: false, glow: 0.05, height: 1.8 });
+const sombra2 = new Stickman({ body: '#2b2f38', outline: '#07080a', eyes: false, glow: 0.05, height: 1.74 });
+
+// ---------- the city (always in the scene, behind the apartment window) ----------
+const city = new THREE.Group(); scene.add(city);
+city.add(box(260, 0.1, 200, '#11141b', 0, -15.1, -80));
+const R = rng(31), WINS = [], LIT = new THREE.MeshBasicMaterial({ color: '#ffcf8a' }), DARK = mat('#1c2230'), VELA = new THREE.MeshBasicMaterial({ color: '#6b3a12' });
+for (let i = 0; i < 26; i++) {
+  const z = -14 - R() * 60, x = (R() - 0.5) * 90 + (i % 2 ? 6 : -6), floors = 5 + Math.floor(R() * 14);
+  const tw = tower({ floors, cols: 4 + Math.floor(R() * 3), w: 6 + R() * 5, d: 6, floorH: 2.8, color: ['#4a5262', '#5a554d', '#46505f'][i % 3], seed: 100 + i, litShare: 0.55 });
+  tw.position.set(x, -15, z); tw.rotation.y = (R() - 0.5) * 0.5; city.add(tw);
+  for (const wi of tw.userData.windows) { wi.mesh.material = LIT; WINS.push({ mesh: wi.mesh, on: wi.on, vela: R() < 0.07, off: z < -64 ? -1 : tApaga - 1.7 + (64 + z) / 50 * 1.9 + R() * 0.35 }); }   // far districts already dark at frame 0; the wave reaches us on "apaga"
+}
+function cityLights(t) { for (const wi of WINS) wi.mesh.material = wi.on && t < wi.off ? LIT : (wi.vela && t > wi.off + 0.6 ? VELA : DARK); }
+coldFill(scene, '#6a86c0', 0.75);
+
+// ---------- set: apartamento 32 (origin) ----------
+const apto = room({ w: 5, d: 5, h: 2.6, wall: '#857a6c', floor: '#5b4a3b', ceiling: '#5e5a54',
+  holes: [{ x: -1.1, y: 0.95, w: 1.3, h: 1.15 }, { x: 1.3, y: 0, w: 0.9, h: 2.08 }] });
+stage.sets.apto = apto; scene.add(apto);
+const portaApto = door({ color: '#6b4a32' }); portaApto.position.set(1.3, 0.035, -2.47); apto.add(portaApto);
+apto.add(box(1.6, 0.42, 0.75, '#3f5a6e', -0.7, 0, 0.9), box(1.6, 0.4, 0.18, '#3f5a6e', -0.7, 0.42, 1.2));     // sofá
+apto.add(box(0.7, 0.5, 0.5, '#6a4a30', 0.6, 0, 0.6));                                                           // mesinha
+apto.add(box(0.06, 0.12, 0.06, '#f2ead8', 0.6, 0.5, 0.6));                                                       // vela
+apto.add(box(0.9, 0.06, 0.35, '#5a4636', -1.1, 0.9, -2.3));                                                      // peitoril
+const hall = new THREE.Group(); apto.add(hall);                                                                  // corredor atrás da porta
+hall.add(box(1.6, 0.05, 1.6, '#3d3a36', 1.3, -0.05, -3.35), box(0.1, 2.6, 1.6, '#4a4741', 0.5, 0, -3.35), box(0.1, 2.6, 1.6, '#4a4741', 2.1, 0, -3.35), box(1.6, 2.6, 0.1, '#4a4741', 1.3, 0, -4.15));
+const lampada = practical('#ffb46b', 7, 9); lampada.position.set(0, 2.35, 0); apto.add(lampada);
+const vela = practical('#ff9a45', 0, 5); vela.position.set(0.6, 0.72, 0.6); apto.add(vela);
+const fresta = accent('#ffe9c4', 0, 0.9); fresta.position.set(1.3, 1.4, -3.7); fresta.target.position.set(1.3, 0, -1.6); apto.add(fresta, fresta.target);
+const telaLuz = new THREE.PointLight('#cfe1ff', 0, 2.5, 1.6); apto.add(telaLuz);
+const gap = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.035), new THREE.MeshBasicMaterial({ color: '#ffe9c4' })); gap.position.set(1.3, 0.018, -2.43); apto.add(gap);                                  // a luz do celular
+apto.add(hero.mesh);
+
+// ---------- set: pronto-socorro (x = 100) ----------
+const ps = new THREE.Group(); ps.position.x = 100; stage.sets.ps = ps; scene.add(ps);
+ps.add(box(20, 0.1, 14, '#2a2b2e', 0, -0.1, 2));
+const fachada = wallWithHoles(9, 5, [{ x: 0, y: 0, w: 2.2, h: 2.4 }], '#b8b2a6', 0.3); fachada.position.z = -2; ps.add(fachada);
+ps.add(box(9, 0.3, 4, '#9a948a', 0, 5, -4));
+const dentroPs = box(8.6, 4.8, 0.1, '#1d2830', 0, 0, -4.2); ps.add(dentroPs);
+for (const x of [-0.55, 0.55]) ps.add(box(1.0, 2.35, 0.04, '#6d8a99', x, 0, -2.02, { rough: 0.2, metal: 0.3 }));
+for (let k = 0; k < 7; k++) { const l = box(0.14, 0.05, 0.05, '#8c8f94', -0.5 + k * 0.16, 1.05 + Math.sin(k * 0.9) * 0.08, -1.82, { metal: 0.8, rough: 0.3 }); l.rotation.z = (k % 2 ? 0.5 : -0.5); ps.add(l); }
+ps.add(box(0.3, 0.3, 0.15, '#4a4a4a', 0.55, 1.0, -1.82, { metal: 0.7 }));                                        // cadeado
+const placaPs = sign(3.4, 0.65, 1024, (c, W, H) => { c.fillStyle = '#f2efe8'; c.fillRect(0, 0, W, H); c.fillStyle = '#d7261e'; c.fillRect(30, 30, 140, 140); c.fillStyle = '#fff'; c.fillRect(85, 50, 30, 100); c.fillRect(50, 85, 100, 30);
+  c.fillStyle = '#d7261e'; c.font = '700 112px Oswald'; c.textBaseline = 'middle'; c.fillText('PRONTO-SOCORRO', 190, 100, 810); }, 0.6);
+placaPs.position.set(0, 3.1, -1.83); ps.add(placaPs);
+const psPoste = practical('#ffb46b', 5, 12); psPoste.position.set(-3.5, 4.2, 1); ps.add(psPoste);
+ps.add(box(0.12, 4.2, 0.12, '#3a3a3a', -3.5, 0, 1));
+const psSirene = accent('#ff3b30', 22, 0.6); psSirene.position.set(3, 3.5, 3); psSirene.target.position.set(0, 1, -2); ps.add(psSirene, psSirene.target);
+
+// ---------- set: monitor do hospital (x = 200) ----------
+const mon = room({ w: 4, d: 4, h: 2.6, wall: '#7e8a8f', floor: '#4b5257', ceiling: '#5d6468' }); mon.position.x = 200; stage.sets.mon = mon; scene.add(mon);
+mon.add(box(2.2, 0.9, 0.8, '#d9d4c8', 0, 0, -0.4));
+mon.add(box(0.75, 0.48, 0.05, '#15171c', 0, 1.02, -0.55), box(0.08, 0.14, 0.08, '#15171c', 0, 0.9, -0.55));
+const telaRansom = sign(0.7, 0.43, 1024, (c, W, H) => {
+  c.fillStyle = '#9c0d0d'; c.fillRect(0, 0, W, H); c.fillStyle = '#ffdddd'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.font = '700 74px Oswald'; c.fillText('SEUS ARQUIVOS', W / 2, 150); c.fillText('FORAM BLOQUEADOS', W / 2, 240);
+  c.font = '700 44px "JetBrains Mono"'; c.fillText('PAGUE PARA RECUPERAR', W / 2, 360); c.fillStyle = '#ff6a6a'; c.fillRect(260, 430, 504, 70); c.fillStyle = '#5a0606'; c.fillText('71:59:58', W / 2, 466);
+  c.strokeStyle = '#ffdddd'; c.lineWidth = 10; c.beginPath(); c.arc(W / 2, 560, 0, 0, 7); c.stroke(); }, 1.3);
+telaRansom.position.set(0, 1.26, -0.52); mon.add(telaRansom);
+mon.add(box(0.5, 0.03, 0.18, '#2b2d33', 0, 0.9, -0.15));
+const monLuz = new THREE.PointLight('#ff3a2a', 4, 4, 1.5); monLuz.position.set(0, 1.3, 0.1); mon.add(monLuz);
+const monLamp = practical('#ffc27d', 3, 6); monLamp.position.set(-1.4, 2.3, 0.6); mon.add(monLamp);
+
+// ---------- set: quarto da vó (x = 300) ----------
+const quarto = room({ w: 3.6, d: 3.6, h: 2.5, wall: '#7c6f84', floor: '#5a4636', ceiling: '#5a5560', holes: [{ x: 0.9, y: 1.0, w: 0.9, h: 0.9 }] });
+quarto.position.x = 300; stage.sets.quarto = quarto; scene.add(quarto);
+quarto.add(box(2.0, 0.42, 1.1, '#e8e1d0', 0.3, 0, -0.9), box(2.0, 0.12, 1.1, '#8a6a9a', 0.3, 0.42, -0.9), box(0.12, 0.85, 1.1, '#5a3e2c', -0.73, 0, -0.9));
+quarto.add(box(0.5, 0.55, 0.45, '#5a3e2c', -1.25, 0, -1.2));
+quarto.add(box(0.06, 0.1, 0.06, '#f2ead8', -1.38, 0.55, -1.2));
+const voDeitada = flatProp(1.7, 0.62, 1024, (c, W, H) => {
+  const k = W / 1.7; c.lineCap = 'round'; c.lineJoin = 'round';
+  c.fillStyle = '#f4f0e6'; c.strokeStyle = '#15171c'; c.lineWidth = 14; c.beginPath(); c.roundRect(40, 210, 280, 120, 50); c.fill(); c.stroke();   // travesseiro
+  c.beginPath(); c.arc(190, 200, 72, 0, 7); c.fillStyle = '#15171c'; c.fill(); c.beginPath(); c.arc(190, 200, 60, 0, 7); c.fillStyle = '#ece6da'; c.fill();
+  c.fillStyle = '#c9c6c0'; c.beginPath(); c.arc(150, 152, 34, 0, 7); c.fill();                                               // coque
+  c.strokeStyle = '#15171c'; c.lineWidth = 9; c.beginPath(); c.moveTo(200, 196); c.lineTo(226, 196); c.moveTo(238, 196); c.lineTo(262, 196); c.stroke(); // olhos fechados
+  c.fillStyle = '#8e5a9e'; c.strokeStyle = '#15171c'; c.lineWidth = 18; c.beginPath(); c.roundRect(250, 220, 740, 150, 60); c.fill(); c.stroke(); // cobertor
+  c.strokeStyle = '#6f4580'; c.lineWidth = 8; for (let x = 330; x < 960; x += 90) { c.beginPath(); c.moveTo(x, 240); c.lineTo(x - 30, 350); c.stroke(); }
+}, { glow: 0.22 });
+voDeitada.position.set(0.35, 0.5, -0.8); quarto.add(voDeitada);
+const caneta = flatProp(0.34, 0.09, 1024, (c, W, H) => {
+  c.lineJoin = 'round'; c.fillStyle = '#e9edf2'; c.strokeStyle = '#15171c'; c.lineWidth = 16; c.beginPath(); c.roundRect(20, 60, 860, 150, 60); c.fill(); c.stroke();
+  c.fillStyle = '#ff8a1f'; c.fillRect(30, 70, 120, 130); c.beginPath(); c.roundRect(880, 95, 120, 80, 20); c.fill(); c.stroke();
+  c.fillStyle = '#1b3d7a'; c.font = '700 70px Oswald'; c.textBaseline = 'middle'; c.fillText('INSULINA', 190, 136);
+  c.fillStyle = '#cfe0ef'; c.strokeStyle = '#15171c'; c.lineWidth = 8; c.beginPath(); c.roundRect(540, 92, 280, 86, 20); c.fill(); c.stroke();
+  c.fillStyle = '#d7261e'; c.font = '700 64px "JetBrains Mono"'; c.fillText('0 UI', 590, 138);
+}, { glow: 0.35 });
+caneta.position.set(-1.18, 0.56, -1.05); quarto.add(caneta);
+const quartoVela = practical('#ff9a45', 3.2, 5); quartoVela.position.set(-1.38, 0.75, -1.2); quarto.add(quartoVela);
+const lua = accent('#8fb0ff', 9, 0.45); lua.position.set(0.9, 2.2, -3.6); lua.target.position.set(0.4, 0.4, -0.6); quarto.add(lua, lua.target);
+quarto.add(vo.mesh);
+
+// ---------- set: farmácia (x = 400) ----------
+const farm = new THREE.Group(); farm.position.x = 400; stage.sets.farm = farm; scene.add(farm);
+farm.add(box(16, 0.1, 12, '#2a2b2e', 0, -0.1, 2), box(16, 0.15, 2, '#5d5a55', 0, 0, 0.2));
+const farmFach = wallWithHoles(7, 4, [{ x: 0, y: 0, w: 3.2, h: 2.6 }], '#d8d3c4', 0.25); farmFach.position.z = -1.5; farm.add(farmFach);
+farm.add(box(3.1, 2.5, 0.1, '#14181c', 0, 0, -2.4));
+const portaAco = new THREE.Group(); farm.add(portaAco);
+for (let k = 0; k < 13; k++) portaAco.add(box(3.2, 0.12, 0.06, k % 2 ? '#8e9296' : '#9ea2a6', 0, 0.85 + k * 0.135, -1.45, { metal: 0.6, rough: 0.5 }));
+const avisoFarm = flatProp(0.8, 0.55, 512, (c, W, H) => { c.fillStyle = '#f7f3e6'; c.fillRect(0, 0, W, H); c.strokeStyle = '#15171c'; c.lineWidth = 10; c.strokeRect(5, 5, W - 10, H - 10);
+  c.fillStyle = '#d7261e'; c.textAlign = 'center'; c.font = '700 64px Oswald'; c.textBaseline = 'middle'; c.fillText('SISTEMA', W / 2, 110); c.fillText('FORA DO AR', W / 2, 190);
+  c.fillStyle = '#15171c'; c.font = '500 38px Oswald'; c.fillText('NÃO VENDEMOS SEM SISTEMA', W / 2, 280); }, { glow: 0.3, billboard: false });
+avisoFarm.position.set(0.3, 1.45, -1.4); farm.add(avisoFarm);
+const cruz = sign(1.1, 1.1, 256, (c, W, H) => { c.fillStyle = '#0f2a17'; c.fillRect(0, 0, W, H); c.fillStyle = '#2fdc6a'; c.fillRect(90, 20, 76, 216); c.fillRect(20, 90, 216, 76); }, 0.9);
+cruz.position.set(2.6, 3.2, -1.36); farm.add(cruz);
+const placaFarm = sign(3.6, 0.6, 1024, (c, W, H) => { c.fillStyle = '#1b6b3a'; c.fillRect(0, 0, W, H); c.fillStyle = '#fff'; c.font = '700 120px Oswald'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('FARMÁCIA', W / 2, H / 2 + 6); }, 0.35);
+placaFarm.position.set(-0.4, 3.2, -1.36); farm.add(placaFarm);
+const farmPoste = practical('#ffb46b', 6, 12); farmPoste.position.set(-3, 4, 1.5); farm.add(farmPoste, box(0.12, 4, 0.12, '#3a3a3a', -3, 0, 1.5));
+const farmVerde = accent('#2fdc6a', 6, 0.7); farmVerde.position.set(2.6, 3.2, 0.5); farmVerde.target.position.set(1, 0, 0.5); farm.add(farmVerde, farmVerde.target);
+
+// ---------- set: corredor e escada do Bloco C (x = 500) ----------
+const corr = new THREE.Group(); corr.position.x = 500; stage.sets.corr = corr; scene.add(corr);
+corr.add(box(3.4, 0.05, 2.6, '#47433d', -0.4, -0.05, -0.9));
+const paredeFundo = wallWithHoles(6, 2.7, [{ x: -0.6, y: 0, w: 0.9, h: 2.05 }], '#7b7568'); paredeFundo.position.z = -2.2; corr.add(paredeFundo);
+const porta34 = door({ color: '#5a3b2a' }); porta34.position.set(-0.6, 0, -2.15); corr.add(porta34);
+const n34 = sign(0.3, 0.18, 256, (c, W, H) => { c.fillStyle = '#c9a35a'; c.fillRect(0, 0, W, H); c.fillStyle = '#15171c'; c.font = '700 110px Oswald'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('34', W / 2, H / 2 + 4); }, 0.3);
+n34.position.set(-0.6, 2.2, -2.13); corr.add(n34);
+corr.add(box(0.12, 2.7, 2.6, '#7b7568', -2.1, 0, -0.9), box(0.12, 2.7, 2.6, '#7b7568', 4.6, 0, -0.9));
+for (let i = 0; i < 12; i++) corr.add(box(0.3, 0.17, 1.3, '#5d5850', 1.45 + i * 0.3, -(i + 1) * 0.17, -0.9));
+corr.add(box(3.6, 0.12, 0.08, '#2f2d2a', 3.1, 0.9, -0.24, { metal: 0.6 }));                                       // corrimão
+corr.add(box(0.12, 2.7, 1.3, '#7b7568', 4.95, -2.04, -0.9));                                                       // parede do patamar
+const corrLuz = practical('#ffcf9a', 0, 6); corrLuz.position.set(0.4, 2.45, -0.9); corr.add(corrLuz);
+const lanterna = accent('#fff1d6', 0, 0.42); corr.add(lanterna, lanterna.target);
+const bulboLant = new THREE.Mesh(new THREE.SphereGeometry(0.04, 10, 8), new THREE.MeshBasicMaterial({ color: '#fff6e0' })); corr.add(bulboLant);
+const caixa = new THREE.Group(); corr.add(caixa);
+caixa.add(box(0.42, 0.32, 0.28, '#f1f4f7', 0, 0, 0), box(0.44, 0.06, 0.3, '#2c6fd6', 0, 0.32, 0));
+const cruzCaixa = sign(0.16, 0.16, 128, (c, W, H) => { c.fillStyle = '#f1f4f7'; c.fillRect(0, 0, W, H); c.fillStyle = '#2c6fd6'; c.fillRect(48, 10, 32, 108); c.fillRect(10, 48, 108, 32); }, 1.2);
+cruzCaixa.position.set(0, 0.17, 0.145); caixa.add(cruzCaixa);
+const azulCorr = accent('#4a8bff', 0, 0.8); azulCorr.position.set(3.8, 1.4, 1.2); azulCorr.target.position.set(0, 0.8, -1.2); corr.add(azulCorr, azulCorr.target);
+corr.add(jorge.mesh, moca.mesh, sombra1.mesh, sombra2.mesh);
+
+// ---------- set: pátio visto da janela (x = 600) ----------
+const patio = new THREE.Group(); patio.position.x = 600; stage.sets.patio = patio; scene.add(patio);
+patio.add(box(40, 0.1, 40, '#2c2e30', 0, -0.1, -4));
+for (const [x, z, r] of [[-11, -6, 0.2], [11, -7, -0.25], [0, -20, 0]]) { const b = tower({ floors: 5, cols: 5, w: 10, d: 7, floorH: 2.8, color: '#57524a', seed: 9 + x, litShare: 0 }); b.position.set(x, 0, z); b.rotation.y = r; patio.add(b); }
+const carro = new THREE.Group(); patio.add(carro); carro.position.set(0.5, 0, -3);
+carro.add(box(1.9, 0.75, 4.2, '#e9e9ea', 0, 0.25, 0), box(1.7, 0.6, 2.2, '#dcdcde', 0, 1.0, -0.3), box(1.2, 0.12, 0.3, '#15171c', 0, 1.6, -0.3));
+const barraAzul = box(0.5, 0.12, 0.28, '#1f3d8a', -0.32, 1.6, -0.3, { emissive: '#3a7bff', glow: 0 }); carro.add(barraAzul);
+const barraVerm = box(0.5, 0.12, 0.28, '#7a1a16', 0.32, 1.6, -0.3, { emissive: '#ff3b30', glow: 0 }); carro.add(barraVerm);
+const sireneAzul = accent('#3a7bff', 0, 1.1); sireneAzul.position.set(0.5, 2.0, -3.3); sireneAzul.target.position.set(0.5, 0, 2); patio.add(sireneAzul, sireneAzul.target);
+const patioPoste = practical('#ffb46b', 16, 20); patioPoste.position.set(-6, 5, 2); patio.add(patioPoste, box(0.15, 5, 0.15, '#3a3a3a', -6, 0, 2));
+const portaria = box(2.5, 2.6, 2, '#6a655c', 6, 0, 2); patio.add(portaria);
+
+// ---------- phone screens (2D) ----------
+const FUNDO = '#0f1218';
+function telaPix(c, x, y, w, h, k) {
+  c.fillStyle = FUNDO; c.fillRect(x, y, w, h);
+  T(c, k ? 'MAQUININHA' : 'PIX', x + w / 2, y + 90, 46, '#9fb3c8', { w: 500 });
+  c.fillStyle = '#d7261e'; c.beginPath(); c.arc(x + w / 2, y + 360, 120, 0, 7); c.fill(); T(c, '!', x + w / 2, y + 362, 180, '#fff');
+  T(c, k ? 'TRANSAÇÃO' : 'SISTEMA', x + w / 2, y + 600, 72, '#fff'); T(c, k ? 'NEGADA' : 'INDISPONÍVEL', x + w / 2, y + 690, 72, '#ff5a4f', { maxW: w - 60 });
+  T(c, k ? 'R$ 42,90' : 'Tente mais tarde', x + w / 2, y + 820, k ? 60 : 40, '#9fb3c8', { w: 500, mono: !!k });
+}
+function telaAlerta(c, x, y, w, h, hora, novo, kk = 1) {
+  c.fillStyle = '#141820'; c.fillRect(x, y, w, h);
+  T(c, hora, x + w / 2, y + 190, 130, '#e8edf5', { w: 500 }); T(c, 'sem sinal de energia', x + w / 2, y + 290, 32, '#7d8796', { w: 500 });
+  const by = y + 400 + (1 - clamp(kk)) * -200;
+  c.globalAlpha *= clamp(kk * 1.5); c.fillStyle = novo ? '#123a2a' : '#3a1212'; c.beginPath(); c.roundRect(x + 24, by, w - 48, novo ? 300 : 280, 30); c.fill();
+  c.fillStyle = novo ? '#2fdc6a' : '#ff3b30'; c.beginPath(); c.roundRect(x + 24, by, w - 48, 70, [30, 30, 0, 0]); c.fill();
+  T(c, novo ? 'ALERTA SP · NOVO' : 'ALERTA SP', x + 54, by + 36, 40, '#fff', { align: 'left' });
+  if (novo) { T(c, 'Resgate no Bloco C.', x + 54, by + 130, 46, '#fff', { align: 'left', w: 500 }); T(c, 'Temos insulina.', x + 54, by + 200, 46, '#7dffae', { align: 'left' }); T(c, 'Deixe o caminho livre.', x + 54, by + 260, 32, '#b9c3cf', { align: 'left', w: 500 }); }
+  else { T(c, 'Ataque cibernético em SP.', x + 54, by + 130, 40, '#fff', { align: 'left', w: 500 }); T(c, 'Siga as regras.', x + 54, by + 190, 46, '#ff8a80', { align: 'left' }); T(c, 'Toque para ler.', x + 54, by + 245, 32, '#b9c3cf', { align: 'left', w: 500 }); }
+  c.globalAlpha = 1;
+}
+function telaChat(c, x, y, w, h, typed, enviado, alarme = 0) {
+  c.fillStyle = '#10141b'; c.fillRect(x, y, w, h);
+  c.fillStyle = '#3a1212'; c.fillRect(x, y, w, 110); T(c, 'ALERTA SP', x + w / 2, y + 60, 44, '#ff8a80');
+  c.fillStyle = '#262c36'; c.beginPath(); c.roundRect(x + 30, y + 160, w - 120, 190, 28); c.fill();
+  T(c, 'Responda: quem', x + 60, y + 215, 42, '#fff', { align: 'left', w: 500 }); T(c, 'mora com você?', x + 60, y + 268, 42, '#fff', { align: 'left', w: 500 }); T(c, '00:31', x + 60, y + 322, 26, '#7d8796', { align: 'left', mono: true });
+  if (typed) {
+    const bw = w - 120; c.fillStyle = alarme ? `rgb(${lerp(31, 120, alarme)},${lerp(91, 20, alarme)},${lerp(60, 20, alarme)})` : '#1f5b3c'; c.beginPath(); c.roundRect(x + 90, y + 420, bw, 190, 28); c.fill();
+    const cut = typed.length > 14 ? typed.lastIndexOf(' ', 15) : -1, a = cut > 0 ? typed.slice(0, cut) : typed, b = cut > 0 ? typed.slice(cut + 1) : '';   // wrap at a space
+    T(c, a, x + 120, y + 478, 44, '#fff', { align: 'left', w: 500 }); if (b) T(c, b.trim(), x + 120, y + 534, 44, '#fff', { align: 'left', w: 500 });
+    if (enviado) T(c, 'ENVIADO 00:32', x + w - 50, y + 584, 24, '#9be7bd', { align: 'right', mono: true });
+  }
+  c.fillStyle = '#1b2029'; c.fillRect(x, y + h - 140, w, 140); c.fillStyle = '#2a313c'; c.beginPath(); c.roundRect(x + 24, y + h - 110, w - 48, 80, 40); c.fill();
+  T(c, enviado ? 'Mensagem' : (typed || 'Mensagem'), x + 60, y + h - 70, 32, '#7d8796', { align: 'left', w: 500, maxW: w - 110 });
+}
+
+// ---------- poses ----------
+const P = {
+  idle: { facing: 0, armL: [0.25, -0.2], armR: [-0.25, 0.2] },
+  scared: { facing: 0, mood: 'scared', armL: [0.7, -1.6], armR: [-0.7, 1.6], lean: -0.04 },
+  phone: { facing: 0, armL: [0.5, -2.1], armR: [-0.5, 2.1], headTilt: 0.12 },
+  back: { facing: 0, armL: [0.3, -0.3], armR: [-0.3, 0.6] },
+  point: { facing: 1, armR: [-1.9, 0.2], armL: [0.6, -1.9], mood: 'scared' },
+  torch: { facing: 0, armL: [0.9, -1.5], armR: [-0.3, 0.3] },
+  carry: { facing: 0, armL: [0.25, -0.1], armR: [-0.9, 1.2] },
+  sit: { facing: 1, legL: [1.45, -1.45], legR: [1.35, -1.35], armL: [0.6, -1.2], armR: [-0.2, 0.9], lean: 0.05, mood: 'scared' },
+};
+function poseHero(p, eyes = true) { hero.o.eyes = eyes; hero.pose(p); }
+
+
+// =====================================================================
+// HQ: carrossel em quadrinhos, "antes de tudo acontecer" (sem dia marcado)
+// =====================================================================
+await document.fonts.load('400 60px Bangers'); await document.fonts.load('700 40px "Comic Neue"');
+const PW = 1080, PH = 1920, INK = '#111216', PAPER = '#f4ecd8';
+
+// ---------- a TV na sala (entre a janela e a porta) ----------
+const rack = box(1.0, 0.45, 0.32, '#4a3a2c', 0.2, 0, -2.25); apto.add(rack);
+apto.add(box(0.86, 0.52, 0.06, '#121317', 0.2, 0.5, -2.3));
+function newsTex(variant) {
+  return canvasTex(1024, 620, (c, W, H) => {
+    c.fillStyle = '#0b1b3d'; c.fillRect(0, 0, W, H);
+    c.strokeStyle = 'rgba(120,160,255,0.18)'; c.lineWidth = 2;
+    for (let x = 0; x < W; x += 64) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, H); c.stroke(); }
+    for (let y = 0; y < H; y += 64) { c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }
+    if (variant === 'europa') {
+      c.fillStyle = 'rgba(255,60,48,0.28)'; c.beginPath(); c.ellipse(520, 230, 170, 110, 0.2, 0, 7); c.fill();
+      c.strokeStyle = '#ff3b30'; c.lineWidth = 6; c.setLineDash([]); c.beginPath(); c.ellipse(520, 230, 170, 110, 0.2, 0, 7); c.stroke();
+      c.setLineDash([18, 14]); c.strokeStyle = '#ffd34d'; c.lineWidth = 7;
+      for (const [a, b, cx, cy] of [[[120, 120], [900, 160], 520, 20], [[140, 360], [920, 300], 520, 460], [[300, 60], [760, 400], 860, 120]]) {
+        c.beginPath(); c.moveTo(...a); c.quadraticCurveTo(cx, cy, ...b); c.stroke(); }
+      c.setLineDash([]);
+      const plane = (x, y, r) => { c.save(); c.translate(x, y); c.rotate(r); c.fillStyle = '#ffffff'; c.beginPath();
+        c.moveTo(28, 0); c.lineTo(-20, -8); c.lineTo(-26, -26); c.lineTo(-32, -26); c.lineTo(-28, -6); c.lineTo(-36, -4); c.lineTo(-36, 4); c.lineTo(-28, 6); c.lineTo(-32, 26); c.lineTo(-26, 26); c.lineTo(-20, 8); c.closePath(); c.fill(); c.restore(); };
+      plane(330, 62, 0.05); plane(700, 410, -0.25); plane(820, 160, 0.6); plane(250, 330, -0.15);
+      T(c, 'ROTA BLOQUEADA', 520, 232, 46, '#ffdddd');
+    } else {
+      T(c, 'SEM RISCO', 512, 150, 120, '#ffffff'); T(c, 'PARA O BRASIL', 512, 270, 100, '#9fd0ff');
+      T(c, '"Situação controlada", diz governo', 512, 360, 40, '#c9d6ea', { w: 500 });
+    }
+    c.fillStyle = '#d7261e'; c.fillRect(0, H - 170, 250, 80); T(c, 'PLANTÃO', 125, H - 128, 56, '#fff');
+    c.fillStyle = '#f2f2f2'; c.fillRect(250, H - 170, W - 250, 80);
+    T(c, variant === 'europa' ? 'ATAQUE HACKER DESVIA VOOS NA EUROPA' : 'GOVERNO DESCARTA ATAQUE NO PAÍS', 270, H - 128, 44, '#111', { align: 'left', maxW: W - 290 });
+    c.fillStyle = '#111'; c.fillRect(0, H - 90, W, 90);
+    T(c, variant === 'europa' ? 'Aeroportos com atrasos · sistemas de navegação sob ataque · companhias mudam rotas' : 'Bolsas oscilam · especialistas pedem calma · "é coisa de lá"', 20, H - 45, 34, '#ffd34d', { align: 'left', w: 500, maxW: W - 40 });
+    c.fillStyle = 'rgba(255,255,255,0.9)'; c.fillRect(W - 170, 24, 146, 56); T(c, 'TV 24H', W - 97, 53, 38, '#0b1b3d');
+  });
+}
+const telaTV = { europa: newsTex('europa'), brasil: newsTex('brasil') };
+const tv = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.47), new THREE.MeshStandardMaterial({ map: telaTV.europa, emissive: '#ffffff', emissiveMap: telaTV.europa, emissiveIntensity: 1.1 }));
+tv.position.set(0.2, 0.76, -2.265); apto.add(tv);
+const tvLuz = new THREE.PointLight('#7fa8ff', 2.5, 4, 1.6); tvLuz.position.set(0.2, 0.8, -1.9); apto.add(tvLuz);
+function setTV(v) { tv.material.map = telaTV[v]; tv.material.emissiveMap = telaTV[v]; tv.material.needsUpdate = true; }
+
+// a sacola de pão do Jorge
+const sacPao = flatProp(0.26, 0.34, 256, (c, W, H) => { c.fillStyle = '#c99a5b'; c.strokeStyle = '#15171c'; c.lineWidth = 10; c.beginPath(); c.roundRect(24, 60, 208, 270, 10); c.fill(); c.stroke();
+  c.fillStyle = '#e8c27e'; c.beginPath(); c.ellipse(90, 64, 40, 30, -0.3, 0, 7); c.fill(); c.stroke(); c.beginPath(); c.ellipse(160, 58, 40, 28, 0.3, 0, 7); c.fill(); c.stroke(); }, { glow: 0.3 });
+corr.add(sacPao);
+
+// ---------- people placement ----------
+function voSofa(tilt = 0) { apto.add(vo.mesh); vo.mesh.visible = true; vo.mesh.position.set(-1.0, -0.06, 0.85);
+  vo.pose({ facing: 1, legL: [1.45, -1.45], legR: [1.35, -1.35], armL: [0.6, -1.0], armR: [-0.1, 0.9], lean: 0.02, headTilt: tilt }); }
+function heroApto(x, z, pose) { apto.add(hero.mesh); hero.mesh.visible = true; hero.mesh.position.set(x, 0, z); hero.o.eyes = true; hero.pose(pose); }
+function allOff() {
+  for (const m of [hero.mesh, jorge.mesh, moca.mesh, vo.mesh, sombra1.mesh, sombra2.mesh]) m.visible = false;
+  voDeitada.visible = false; sacPao.visible = false; caixa.visible = false; tvLuz.color.set('#7fa8ff'); tv.material.emissiveIntensity = 1.1;
+  lampada.userData.light.intensity = 0; lampada.userData.bulb.visible = false; vela.userData.light.intensity = 0;
+  fresta.intensity = 0; telaLuz.intensity = 0; sireneAzul.intensity = 0; lanterna.intensity = 0; bulboLant.visible = false; gap.visible = false; corrLuz.userData.light.intensity = 0;
+  for (const wi of WINS) wi.mesh.material = wi.on ? LIT : DARK;                     // a cidade inteira acesa: nada aconteceu ainda
+  scene.background = new THREE.Color('#1b2438'); setTV('europa');
+}
+function sofaShot(pose = P.phone, tilt = 0.1) { salaLuz(); voSofa(tilt); heroApto(-0.1, 0.62, pose); stage.aim([-0.4, 1.12, -0.6], [-0.66, 0.92, 0.9], 56); }
+function salaLuz() { lampada.userData.light.intensity = 6; lampada.userData.bulb.visible = true; }
+
+// ---------- render one 3D panel into the page ----------
+const R3 = stage.renderer, CAM = stage.camera;
+function shot(x, y, w, h, setup, o = {}) {
+  allOff(); R3.setSize(w, h, false); stage.composer.setSize(w, h); CAM.aspect = w / h; CAM.updateProjectionMatrix();
+  setup();
+  stage.lens.uniforms.time.value = o.t ?? 1.3; stage.lens.uniforms.fisheye.value = 0; stage.lens.uniforms.vignette.value = o.vignette ?? 0.4; stage.bloom.strength = o.bloom ?? 0.6;
+  scene.traverse(q => { if (q.userData.billboard && q.visible) q.userData.billboard(CAM); });
+  stage.composer.render();
+  C.drawImage(R3.domElement, 0, 0, w, h, x, y, w, h);
+}
+function frame(x, y, w, h) { C.save(); C.lineWidth = 10; C.strokeStyle = INK; C.strokeRect(x, y, w, h); C.restore(); }
+
+// ---------- lettering ----------
+function wrap(c, text, maxW) { const ws = text.split(' '), lines = []; let cur = '';
+  for (const w of ws) { const tst = cur ? cur + ' ' + w : w; if (c.measureText(tst).width > maxW && cur) { lines.push(cur); cur = w; } else cur = tst; }
+  if (cur) lines.push(cur); return lines; }
+// balloon: x,y = top-left, w = width; tail = [x, y] point the tail aims at; kind 'fala' | 'tv' | 'pensa'
+function balloon(c, x, y, w, text, tail, o = {}) {
+  const px = o.px || 40, lh = px * 1.18, pad = o.pad || 30;
+  c.save(); c.font = `700 ${px}px "Comic Neue"`; const lines = wrap(c, text.toUpperCase(), w - pad * 2); const h = lines.length * lh + pad * 1.5;
+  const cx = x + w / 2, cy = y + h / 2, tv = o.kind === 'tv';
+  const shape = () => { c.beginPath(); if (tv) c.rect(x, y, w, h); else c.roundRect(x, y, w, h, Math.min(h / 2, 70)); };
+  const tailP = () => { if (!tail) return; const bx = clamp(tail[0], x + 60, x + w - 60), by = tail[1] > cy ? y + h - 4 : y + 4;
+    c.beginPath(); c.moveTo(bx - 26, by); c.lineTo(tail[0], tail[1]); c.lineTo(bx + 26, by); c.closePath(); };
+  c.lineJoin = 'round';
+  c.fillStyle = tv ? '#e9f2ff' : '#ffffff'; c.strokeStyle = INK; c.lineWidth = 14;
+  shape(); c.stroke(); tailP(); c.stroke(); shape(); c.fill(); tailP(); c.fill();
+  if (tv) { c.lineWidth = 4; c.strokeStyle = '#2c6fd6'; c.strokeRect(x + 10, y + 10, w - 20, h - 20); }
+  c.fillStyle = INK; c.textAlign = 'center'; c.textBaseline = 'middle';
+  lines.forEach((s, i) => { c.font = `700 ${px}px "Comic Neue"`;
+    if (o.hl) { const parts = s.split(o.hl); if (parts.length > 1) { let tw = c.measureText(s).width, xx = cx - tw / 2; c.textAlign = 'left';
+      parts.forEach((p, k) => { c.fillStyle = INK; c.fillText(p, xx, y + pad * 0.75 + lh * (i + 0.5)); xx += c.measureText(p).width;
+        if (k < parts.length - 1) { c.fillStyle = '#d7261e'; c.fillText(o.hl, xx, y + pad * 0.75 + lh * (i + 0.5)); xx += c.measureText(o.hl).width; } }); c.textAlign = 'center'; return; } }
+    c.fillStyle = INK; c.fillText(s, cx, y + pad * 0.75 + lh * (i + 0.5)); });
+  if (o.who) { c.font = '700 26px Oswald'; const tw = c.measureText(o.who.toUpperCase()).width + 28; c.fillStyle = '#d7261e'; c.beginPath(); c.roundRect(x + 24, y - 20, tw, 40, 10); c.fill(); c.fillStyle = '#fff'; c.textAlign = 'left'; c.fillText(o.who.toUpperCase(), x + 38, y + 1); }
+  c.restore(); return h;
+}
+function capBox(c, x, y, text, o = {}) { c.save(); c.font = `700 ${o.px || 34}px Oswald`; const w = c.measureText(text.toUpperCase()).width + 44, h = (o.px || 34) + 30;
+  c.fillStyle = o.bg || '#ffd34d'; c.strokeStyle = INK; c.lineWidth = 7; c.beginPath(); c.rect(x, y, w, h); c.fill(); c.stroke();
+  c.fillStyle = INK; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(text.toUpperCase(), x + 22, y + h / 2 + 1); c.restore(); }
+function paper() { C.fillStyle = PAPER; C.fillRect(0, 0, PW, PH);
+  C.fillStyle = 'rgba(17,18,22,0.07)'; for (let y = 0; y < PH; y += 22) for (let x = (y / 22) % 2 ? 11 : 0; x < PW; x += 22) { C.beginPath(); C.arc(x, y, 3, 0, 7); C.fill(); } }
+function pageNum(n) { C.save(); C.fillStyle = INK; C.beginPath(); C.roundRect(PW / 2 - 70, 1740, 140, 56, 28); C.fill(); T(C, `${n}/6`, PW / 2, 1769, 34, '#fff'); C.restore(); }
+function swipe(c, x, y, label = 'ARRASTA PRO LADO') {
+  c.save(); c.font = '400 70px Bangers'; const tw = c.measureText(label).width; const w = tw + 230, h = 120;
+  c.fillStyle = '#ffd34d'; c.strokeStyle = INK; c.lineWidth = 10; c.beginPath(); c.roundRect(x - w / 2, y - h / 2, w, h, 60); c.fill(); c.stroke();
+  c.fillStyle = INK; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(label, x - w / 2 + 50, y + 4);
+  for (let k = 0; k < 3; k++) { const ax = x + w / 2 - 150 + k * 38; c.globalAlpha = 0.45 + k * 0.27; c.beginPath(); c.moveTo(ax, y - 30); c.lineTo(ax + 32, y); c.lineTo(ax, y + 30); c.lineTo(ax + 12, y); c.closePath(); c.fill(); }
+  c.restore(); }
+function bang(c, s, x, y, px, fill, o = {}) { c.save(); c.font = `400 ${px}px Bangers`; c.textAlign = o.align || 'center'; c.textBaseline = 'middle';
+  if (o.rot) { c.translate(x, y); c.rotate(o.rot); x = 0; y = 0; }
+  c.lineJoin = 'round'; c.lineWidth = o.stroke ?? Math.round(px / 6); c.strokeStyle = INK; c.strokeText(s, x, y); c.fillStyle = fill; c.fillText(s, x, y); c.restore(); }
+
+// ---------- the six slides ----------
+const M = 40, G = 26;                                       // page margin and gutter
+const SLIDES = [
+  () => {   // 1. CAPA: a TV enorme com o plantão; você de costas, no celular
+    shot(0, 0, PW, PH, () => { salaLuz(); lampada.userData.light.intensity = 2.0; heroApto(0.66, -1.15, P.phone); hero.o.eyes = false; hero.pose(P.phone);
+      tvLuz.color.set('#ff5040'); tvLuz.intensity = 2.2; tv.material.emissiveIntensity = 0.75; stage.aim([0.38, 1.22, 0.35], [0.32, 0.86, -2.3], 44); }, { vignette: 0.55, bloom: 0.45 });
+    C.fillStyle = 'rgba(8,9,12,0.6)'; C.fillRect(0, 0, PW, 560);
+    const gr = C.createLinearGradient(0, 1380, 0, PH); gr.addColorStop(0, 'rgba(8,9,12,0)'); gr.addColorStop(1, 'rgba(8,9,12,0.85)'); C.fillStyle = gr; C.fillRect(0, 1380, PW, PH - 1380);
+    C.save(); C.fillStyle = '#d7261e'; C.beginPath(); C.roundRect(M + 10, 130, 440, 70, 35); C.fill(); T(C, 'ALERTA SP · ANTES DE TUDO', M + 230, 166, 34, '#fff', { maxW: 410 }); C.restore();
+    bang(C, 'ATAQUE HACKER', 540, 300, 140, '#ffd34d', { rot: -0.03 });
+    bang(C, 'DESVIA AVIÕES', 540, 440, 118, '#ffffff', { rot: -0.03 });
+    bang(C, 'NA EUROPA', 860, 545, 64, '#ff4b3e', { rot: -0.03, stroke: 12 });
+    balloon(C, 430, 1330, 560, 'Nossa. Coitado de quem tá lá.', [960, 1200], { px: 40, who: 'você' });
+    bang(C, 'E TODO MUNDO ACHOU QUE ERA LONGE...', 540, 1585, 58, '#ffffff', { stroke: 12 });
+    swipe(C, 540, 1730);
+  },
+  () => {   // 2. a sala: a TV e a vó
+    paper();
+    const x = M, w = PW - 2 * M; let y = 110; const h1 = 760, h2 = 760;
+    shot(x, y, w, h1, () => { salaLuz(); tvLuz.intensity = 3; stage.aim([0.2, 0.8, -1.25], [0.2, 0.76, -2.3], 40); });
+    frame(x, y, w, h1); capBox(C, x + 24, y + 24, 'Algum tempo antes. Bloco C, apto 32.');
+    balloon(C, x + 40, y + h1 - 300, 640, 'Pela terceira vez na semana, aviões precisaram desviar no céu da Europa.', [x + 470, y + 360], { kind: 'tv', px: 36 });
+    y += h1 + G;
+    shot(x, y, w, h2, () => sofaShot(P.phone, 0.15));
+    frame(x, y, w, h2);
+    balloon(C, x + w - 520, y + 40, 500, 'Ainda bem que a gente não vai viajar pra Europa.', [x + w - 330, y + 290], { px: 38, who: 'vó cida' });
+    balloon(C, x + 24, y + 40, 400, 'Vó, a gente não vai nem pra Santos.', [x + 170, y + 270], { px: 38, who: 'você' });
+    pageNum(2);
+  },
+  () => {   // 3. o corredor: Jorge do 34
+    paper();
+    const x = M, w = PW - 2 * M; let y = 110; const h1 = 640, hb = 880, wb = (w - G) / 2;
+    shot(x, y, w, h1, () => { corrLuz.userData.light.intensity = 5; corr.add(hero.mesh); hero.mesh.visible = true; hero.mesh.position.set(0.75, 0, -1.25); hero.o.eyes = true; hero.pose({ facing: -1, armL: [0.2, -0.2], armR: [-0.2, 0.2] });
+      jorge.mesh.visible = true; jorge.mesh.position.set(-0.3, 0, -1.6); jorge.pose({ facing: 1, armL: [0.2, -0.2], armR: [-0.7, -0.6] }); sacPao.visible = true; sacPao.position.set(-0.08, 0.55, -1.5);
+      stage.aim([500 + 0.22, 1.2, 0.45], [500 + 0.2, 0.95, -1.5], 58); });
+    frame(x, y, w, h1); capBox(C, x + 24, y + 24, 'No corredor, voltando da padaria.');
+    balloon(C, x + 24, y + 120, 560, 'Viu? Lá fora tão mexendo até com avião no ar.', [x + 300, y + 330], { px: 36, who: 'jorge do 34' });
+    y += h1 + G;
+    shot(x, y, wb, hb, () => { corrLuz.userData.light.intensity = 5; corr.add(hero.mesh); hero.mesh.visible = true; hero.mesh.position.set(0.75, 0, -1.25); hero.o.eyes = true; hero.pose({ facing: -1, armL: [0.5, -0.4], armR: [-0.6, 0.3] });
+      stage.aim([500 + 0.15, 1.2, 0.2], [500 + 0.75, 1.0, -1.25], 50); });
+    frame(x, y, wb, hb);
+    balloon(C, x + 20, y + 30, wb - 40, 'Ninguém derrubou nada, Jorge. Só mudaram a rota.', [x + wb / 2 + 60, y + 520], { px: 34, who: 'você' });
+    shot(x + wb + G, y, wb, hb, () => { corrLuz.userData.light.intensity = 2.2; jorge.mesh.visible = true; jorge.mesh.position.set(-0.3, 0, -1.6); jorge.pose({ facing: 1, armL: [0.2, -0.2], armR: [-1.6, 0.4], headTilt: 0.05 });
+      stage.aim([500 + 0.35, 1.15, -0.45], [500 - 0.25, 1.0, -1.6], 46); }, { vignette: 0.6 });
+    frame(x + wb + G, y, wb, hb);
+    balloon(C, x + wb + G + 20, y + 30, wb - 40, 'Hoje é avião lá. Um dia vai ser a luz aqui.', [x + wb + G + wb / 2 - 30, y + 470], { px: 34, who: 'jorge', hl: 'A LUZ AQUI.' });
+    pageNum(3);
+  },
+  () => {   // 4. o grupo do prédio (2D) e a vó
+    paper();
+    const x = M, w = PW - 2 * M; let y = 110; const h1 = 1000, h2 = 560;
+    C.fillStyle = '#10141b'; C.fillRect(x, y, w, h1);
+    C.fillStyle = '#1d3b2c'; C.fillRect(x, y, w, 120); T(C, 'MORADORES BLOCO C', x + 40, y + 48, 40, '#fff', { align: 'left' }); T(C, '47 participantes', x + 40, y + 92, 28, '#9be7bd', { align: 'left', w: 500 });
+    const msgs = [['Tiago 41', 'kkkk a Europa tá um caos', '#ffb86b'], ['Síndico', 'Lembrando: reunião sábado às 10h.', '#7dd3ff'], ['Dona Neide 12', 'Alguém viu meu gato cinza?', '#ff8ac0'],
+      ['Jorge 34', 'Gente, guardem água e pilha. Sério.', '#ffd34d'], ['Tiago 41', 'lá vem o Jorge kkkkk', '#ffb86b'], ['Síndico', 'Jorge, sem alarmismo no grupo, por favor.', '#7dd3ff']];
+    let my = y + 160;
+    for (const [who, txt, col] of msgs) { C.font = '500 36px Oswald'; const lines = wrap(C, txt, w - 220); const bh = 70 + lines.length * 44;
+      C.fillStyle = '#232a35'; C.beginPath(); C.roundRect(x + 30, my, w - 140, bh, 22); C.fill();
+      T(C, who, x + 56, my + 32, 28, col, { align: 'left' }); lines.forEach((s, i) => T(C, s, x + 56, my + 78 + i * 44, 36, '#f1f1f1', { align: 'left', w: 500 }));
+      my += bh + 18; }
+    frame(x, y, w, h1); capBox(C, x + w - 360, y + h1 - 90, 'Ninguém levou a sério.', { bg: '#ffffff' });
+    y += h1 + G;
+    shot(x, y, w, h2, () => sofaShot(P.phone, -0.05));
+    frame(x, y, w, h2);
+    balloon(C, x + w - 480, y + 30, 460, 'Larga esse celular e vem jantar.', [x + w - 330, y + 220], { px: 36, who: 'vó cida' });
+    balloon(C, x + 24, y + 40, 300, 'Já vou, vó!', [x + 160, y + 210], { px: 36, who: 'você' });
+    pageNum(4);
+  },
+  () => {   // 5. a janela: a cidade inteira acesa
+    paper();
+    const x = M, w = PW - 2 * M; let y = 110; const h1 = 1000, h2 = 520;
+    shot(x, y, w, h1, () => { salaLuz(); lampada.userData.light.intensity = 2.5; heroApto(-1.1, -1.6, { facing: 0, armL: [0.3, -0.3], armR: [-0.3, 0.6] }); hero.o.eyes = false; hero.pose({ facing: 0, armL: [0.3, -0.3], armR: [-0.3, 0.6] });
+      stage.aim([-0.55, 1.4, 0.55], [-1.2, 1.05, -3.2], 62); });
+    frame(x, y, w, h1);
+    balloon(C, x + 30, y + 40, 600, 'O mundo tá meio doido, né, vó?', [x + 470, y + 520], { px: 38, who: 'você' });
+    capBox(C, x + 24, y + h1 - 96, 'São Paulo inteira acesa, como sempre.');
+    y += h1 + G;
+    shot(x, y, w, h2, () => { sofaShot(P.idle, 0.1); setTV('brasil'); hero.mesh.visible = false; });
+    frame(x, y, w, h2);
+    balloon(C, x + w - 520, y + 30, 500, 'O mundo sempre tá, filho. Isso é coisa de lá.', [x + w - 330, y + 220], { px: 34, who: 'vó cida' });
+    balloon(C, x + 24, y + 300, 400, 'TV: Sem risco para o Brasil, diz governo.', [x - 10, y + 200], { kind: 'tv', px: 30 });
+    pageNum(5);
+  },
+  () => {   // 6. o fim: ninguém levou a sério
+    shot(0, 0, PW, PH, () => { allOff(); stage.aim([500 + 2.2, 1.3, 1.2], [500 - 0.6, 1.3, -2.2], 70); }, { vignette: 0.7 });
+    shot(0, 0, PW, PH, () => { salaLuz(); lampada.userData.light.intensity = 1.5; heroApto(-1.1, -1.6, { facing: 0 }); hero.o.eyes = false; hero.pose({ facing: 0, armL: [0.3, -0.3], armR: [-0.3, 0.6] });
+      stage.aim([-0.2, 1.5, 1.2], [-1.2, 1.1, -3.2], 66); }, { vignette: 0.75 });
+    C.fillStyle = 'rgba(6,7,10,0.62)'; C.fillRect(0, 0, PW, PH);
+    bang(C, 'NINGUÉM', 540, 470, 190, '#ffffff', { rot: -0.03 });
+    bang(C, 'LEVOU A SÉRIO', 540, 640, 140, '#ff4b3e', { rot: -0.03 });
+    T(C, 'Nem você. Nem a vó. Nem o síndico.', 540, 800, 48, '#f3eee4', { w: 500 });
+    T(C, 'Só o Jorge do 34.', 540, 866, 48, '#ffd34d', { w: 500 });
+    C.save(); C.fillStyle = '#ffffff'; C.strokeStyle = INK; C.lineWidth = 10; C.beginPath(); C.roundRect(140, 1110, 800, 200, 30); C.fill(); C.stroke(); C.restore();
+    T(C, 'VOCÊ TERIA LEVADO A SÉRIO?', 540, 1170, 54, INK, { maxW: 740 });
+    T(C, 'COMENTA SIM OU NÃO', 540, 1250, 46, '#d7261e', { maxW: 740 });
+    T(C, 'SIGA PRA VER O QUE ACONTECEU', 540, 1440, 54, '#ffffff', { maxW: 980 });
+    bang(C, 'ALERTA SP', 540, 1560, 110, '#ffd34d');
+    pageNum(6);
+  },
+];
+window.TOTAL = 6;
+window.seek = t => { const i = clamp(Math.round(t), 0, 5); C.setTransform(1, 0, 0, 1, 0, 0); C.globalAlpha = 1; C.clearRect(0, 0, PW, PH); SLIDES[i](); };
+window.READY = true;
+</script>
+</body></html>
