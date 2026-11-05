@@ -1,10 +1,12 @@
 """voice.py PART_DIR : lines.json -> narration.wav + timing.js (the time of every word, for captions and animation)
-Each line has "text" (the caption form: "11:58 PM") and optionally "say" (the spoken form: "eleven fifty-eight P M").
-Main voice: Kokoro-82M, a free open model that runs on this computer's CPU. Word times come from faster-whisper, also local.
+Each line has "text" (the caption form: "23:58") and optionally "say" (the spoken form: "vinte e três e cinquenta e oito").
+Language: "lang" in lines.json, default "pt-br" (Brazilian Portuguese). pt-br voices: pm_alex (narrator), pm_santa, pf_dora.
+Main voice: Kokoro-82M, a free open model that runs on this computer's CPU. Word times come from faster-whisper, also local
+(the multilingual "base" model for pt-br, "base.en" for English).
 If Kokoro can't run, it falls back by itself to edge-tts (a free online voice), then to the computer's own voice
 (Windows SAPI, macOS say, Linux espeak-ng). Force one with "engine": "kokoro" | "edge" | "offline" in lines.json.
 needs: pip install kokoro-onnx soundfile faster-whisper edge-tts imageio-ffmpeg numpy  (models download on the first run)"""
-import asyncio, difflib, json, os, platform, re, shutil, subprocess, sys, tempfile, urllib.request, wave
+import asyncio, difflib, json, os, platform, re, shutil, subprocess, sys, tempfile, unicodedata, urllib.request, wave
 import numpy as np
 SR = 48000
 HERE = os.path.dirname(os.path.abspath(__file__)); MODELS = os.path.join(HERE, "models")
@@ -17,7 +19,8 @@ def ffmpeg():
 FF = ffmpeg()
 part = sys.argv[1]
 spec = json.load(open(os.path.join(part, "lines.json"), encoding="utf-8"))
-VOICE, SPEED = spec.get("voice", "am_michael"), float(spec.get("speed", 1.1))
+LANG = spec.get("lang", "pt-br").lower(); WLANG = LANG.split("-")[0]           # "pt-br" -> whisper language "pt"
+VOICE, SPEED = spec.get("voice", "pm_alex" if WLANG == "pt" else "am_michael"), float(spec.get("speed", 1.1))
 engine = os.environ.get("VOICE_ENGINE", spec.get("engine", "kokoro"))
 os.makedirs(os.path.join(part, "vo"), exist_ok=True); os.makedirs(MODELS, exist_ok=True)
 
@@ -40,13 +43,15 @@ def whisper():
     global _w
     if _w is None:
         from faster_whisper import WhisperModel, download_model
-        d = os.path.join(MODELS, "whisper-base.en")
-        if not os.path.exists(os.path.join(d, "model.bin")): print("downloading the timing model (once)"); download_model("base.en", output_dir=d)
+        name = "base.en" if WLANG == "en" else "base"                        # base.en only knows English
+        d = os.path.join(MODELS, "whisper-" + name)
+        if not os.path.exists(os.path.join(d, "model.bin")): print("downloading the timing model (once)"); download_model(name, output_dir=d)
         _w = WhisperModel(d, device="cpu", compute_type="int8")
     return _w
 
-def norm(w): return re.sub(r"[^a-z0-9]", "", w.lower())
-def clean(w): return w.strip(".,!?;\"()[]").rstrip(".")
+def norm(w):                                            # accents off for matching: "não" == "nao", "você" == "voce"
+    w = unicodedata.normalize("NFD", w.lower()); return re.sub(r"[^a-z0-9]", "", "".join(c for c in w if not unicodedata.combining(c)))
+def clean(w): return w.strip(".,!?;\"()[]«»“”—…").rstrip(".")
 
 def estimate(text, raw):
     """word times in proportion to word length, inside the voiced part of the line"""
@@ -61,7 +66,7 @@ def align(text, raw):
     """word times from faster-whisper, matched back to the script's own words"""
     try:
         audio = np.frombuffer(raw, np.int16).astype(np.float32)[::3] / 32768      # 48 kHz -> 16 kHz
-        segs, _ = whisper().transcribe(audio, language="en", word_timestamps=True, beam_size=1, initial_prompt=text)
+        segs, _ = whisper().transcribe(audio, language=WLANG, word_timestamps=True, beam_size=1, initial_prompt=text)
         heard = [(w.word, w.start, w.end) for s in segs for w in s.words]
     except Exception as e:
         print("word timing fell back to an estimate:", e); return estimate(text, raw)
@@ -87,7 +92,8 @@ def align(text, raw):
 
 async def edge(text, voice, path):
     import edge_tts
-    if re.match(r"^[ab][fm]_", voice): voice = "en-US-AvaNeural" if voice[1] == "f" else "en-US-AndrewNeural"
+    if re.match(r"^p[fm]_", voice): voice = "pt-BR-FranciscaNeural" if voice[1] == "f" else "pt-BR-AntonioNeural"
+    elif re.match(r"^[ab][fm]_", voice): voice = "en-US-AvaNeural" if voice[1] == "f" else "en-US-AndrewNeural"
     for attempt in range(3):
         try:
             words, audio = [], bytearray()
@@ -106,15 +112,15 @@ def offline(text, path):
         ps = ("Add-Type -AssemblyName System.Speech; $s = New-Object System.Speech.Synthesis.SpeechSynthesizer; $s.Rate = 1; "
               f"$s.SetOutputToWaveFile('{path}'); $s.Speak([IO.File]::ReadAllText('{txt}')); $s.Dispose()")
         subprocess.run(["powershell", "-NoProfile", "-Command", ps], check=True)
-    elif platform.system() == "Darwin": subprocess.run(["say", "-f", txt, "-o", path, "--data-format=LEI16@22050"], check=True)
-    else: subprocess.run(["espeak-ng", "-f", txt, "-w", path], check=True)
+    elif platform.system() == "Darwin": subprocess.run(["say"] + (["-v", "Luciana"] if WLANG == "pt" else []) + ["-f", txt, "-o", path, "--data-format=LEI16@22050"], check=True)
+    else: subprocess.run(["espeak-ng", "-v", LANG, "-f", txt, "-w", path], check=True)
 
 async def speak(i, line):
     """one line -> (pcm at 48 kHz, word boundaries relative to that pcm)"""
     text, path = line.get("say", line["text"]).strip(), os.path.join(part, "vo", f"line{i:02d}")
     if engine == "kokoro":
         import soundfile as sf
-        a, sr = kokoro().create(text, voice=line.get("voice", VOICE), speed=float(line.get("speed", SPEED)), lang="en-us")
+        a, sr = kokoro().create(text, voice=line.get("voice", VOICE), speed=float(line.get("speed", SPEED)), lang=line.get("lang", LANG))
         sf.write(path + ".wav", a, sr); raw = decode(path + ".wav"); return raw, align(text, raw)
     if engine == "edge":
         bounds = await edge(text, line.get("voice", VOICE), path + ".mp3"); return decode(path + ".mp3"), bounds
@@ -165,11 +171,11 @@ async def main():
     with wave.open(os.path.join(part, "narration.wav"), "wb") as w:
         w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes(bytes(pcm))
     open(os.path.join(part, "timing.js"), "w", encoding="utf-8").write(
-        "window.TIMING = " + json.dumps({"voice_end": round(cursor, 3), "engine": engine, "lines": out}) + ";\n")
+        "window.TIMING = " + json.dumps({"voice_end": round(cursor, 3), "engine": engine, "lang": LANG, "lines": out}, ensure_ascii=False) + ";\n")
     x = np.frombuffer(bytes(pcm), np.int16).astype(np.float32) / 32768        # every caption word must have voice under it
     bad = [w["w"] for l in out for w in l["words"] if np.sqrt(np.mean(x[max(0, int((w["s"] - 0.12) * SR)):int((w["s"] + 0.12) * SR)] ** 2)) < 0.004]
     print("caption check: OK" if not bad else f"CAPTION WARNING: no voice within 120 ms of: {', '.join(bad[:8])}")
     n = sum(len(l["words"]) for l in out)
-    print(f"narration {cursor:.2f} s, {n} words, {n / cursor * 60:.0f} words per minute, voice: {engine}")
+    print(f"narration {cursor:.2f} s, {n} words, {n / cursor * 60:.0f} words per minute, voice: {engine}, language: {LANG}")
 
 asyncio.run(main())

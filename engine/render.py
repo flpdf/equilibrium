@@ -41,7 +41,16 @@ def main():
         chunks = page.evaluate("(window.CHUNKS || []).map(c => (c.words || []).map(w => String(w.w || w)))")
         FUNC = set("a an the to of at for from with by into onto under about after before until behind through and or but nor so if as than that this these those is are was were be been it its it's i i'm you you're they're he she we they me him her us them my your his our their who which what when where while because".split())
         PART = set("in on up off out down back away over".split())    # a verb's particle may end a chunk ("snowed in"), never alone
-        bad = [" ".join(c) for c in chunks if c and (c[-1].lower().strip(".,!?;:\"'") in FUNC or (len(c) == 1 and c[0].lower() in PART))]
+        lang = page.evaluate("(window.TIMING && window.TIMING.lang) || 'pt-br'")
+        if lang.lower().startswith("pt"):                              # Brazilian Portuguese: the same list as stage.js FUNCTION_WORDS_PT
+            FUNC = set(("o a os as um uma uns umas de do da dos das em no na nos nas num numa ao à aos às "
+                "por pelo pela pelos pelas para pra pro pras pros com sem sob até sobre entre após desde contra perante "
+                "e ou mas nem que se como quando onde porque porquê pois enquanto embora caso então "
+                "eu tu você vocês ele ela eles elas nós me te lhe lhes nos vos se seu sua seus suas meu minha meus minhas teu tua teus tuas "
+                "nosso nossa nossos nossas dele dela deles delas este esta estes estas esse essa esses essas isso isto aquele aquela aquilo "
+                "neste nesta nesse nessa naquele naquela deste desta desse dessa daquele daquela qual quais cujo cuja "
+                "é são era eram foi foram ser está estão estava").split()); PART = set()
+        bad = [" ".join(c) for c in chunks if c and (c[-1].lower().strip(".,!?;:\"'«»“”—…") in FUNC or (len(c) == 1 and c[0].lower() in PART))]
         if not chunks: print("CAPTION CHECK: the page has no window.CHUNKS, so the caption chunks can't be checked")
         elif bad and at is None and "--force" not in a: sys.exit("CAPTION CHUNK FAIL (a caption ends on a function word; chunk by meaning): " + " | ".join(bad[:10]))
         else: print(f"caption chunks: {len(chunks)}, {len(bad)} ending on a function word")

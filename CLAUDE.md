@@ -12,6 +12,13 @@ Everything is built in code on this computer. There are no AI images and no AI v
 
 **This file is the whole system.** Follow it exactly. Its examples (a tower block, water, a cat) only show the level of detail. Make it MY story: never copy an example's setting, names or lines.
 
+## Language: Brazilian Portuguese (pt-BR)
+
+Everything the viewer sees or hears is in Brazilian Portuguese: the script, the narrator, the characters, the captions, the rule stickers, the HUD ("DIA 1"), the end card and the post kit. Write natural spoken Brazilian Portuguese ("você", "pra", "tá"), not European Portuguese and not a translation from English. Times use the 24-hour clock ("23:58"). Talk to me in Portuguese.
+- The engine reads `"lang": "pt-br"` from `lines.json` (the default). Kokoro speaks it with real pt-BR phonemes; faster-whisper times it with the multilingual `base` model.
+- pt-BR voices: `pm_alex` (the narrator), `pm_santa` (a second man), `pf_dora` (a woman). There are only three, so give each character one voice and keep it all season.
+- Captions: `chunkCaptions` uses the Portuguese function-word list (`FUNCTION_WORDS_PT`: o, a, de, do, da, em, no, na, que, se, seu...), keeps accents, keeps "40 litros" together, and never splits a pronoun from its verb ("me deixa"). Long chunks and labels shrink to fit the frame.
+
 ## 0. Setup (you do all of it)
 
 1. **Save this file.** If it isn't saved as `CLAUDE.md` in this folder yet, save it there word for word.
@@ -34,7 +41,7 @@ Ask me in one message, with your defaults filled in:
 - **The video idea:** one line is fine. Default: pitch 10 premises (section 3) and recommend the best.
 - **The setting.** Rotate between episodes: apartment, subway, school at night, hospital, cabin, plane, office, motel. Fit the threat to the setting.
 - **The length:** 60 to 90 s. Default 70.
-- **The narrator.** "free" means Kokoro `am_michael`, the default.
+- **The narrator.** "free" means Kokoro `pm_alex` (pt-BR), the default.
   - ElevenLabs only if I already have a paid key and say so. It's never required.
 
 **Then, before building anything, show me:**
@@ -45,13 +52,13 @@ Only then render the full video. If I answer "you pick" at a gate, choose and ke
 
 ## 2. Format
 
-- **The hook:** "Imagine you..." with a time stamp, in the first 3 s. The camera starts close on you and pulls out to show where you are.
+- **The hook:** "Imagina que você..." with a time stamp, in the first 3 s. The camera starts close on you and pulls out to show where you are.
 - **Frame 0 shows you AND the threat** (or its light under the door), with the first caption already on screen. A face alone reads as an empty circle at feed size.
 - **The HUD:** DAY n and a clock that moves forward through the episode, monospace, top-left.
 - **3 to 4 RULES,** each a short command on a tilted sticker, and each paid off on screen later.
 - **A threat that escalates,** mostly shown, not told.
 - **A twist that makes one rule impossible to keep.**
-- **A two-choice ending** ("DO YOU OPEN IT?") with a green option and a red option, where both look bad. Then "COMMENT BELOW" and "FOLLOW FOR DAY 2".
+- **A two-choice ending** ("VOCÊ ABRE?") with a green option and a red option, where both look bad. Then "COMENTE ABAIXO" and "SIGA PARA O DIA 2".
 - **Size:** 20 to 30 voice lines and a new shot every 1.5 to 3 s. The length can be 60 to 90 s, but 60 to 75 s works best; cut filler before going past 75.
 
 ## 3. Story
@@ -87,7 +94,7 @@ Only then render the full video. If I answer "you pick" at a gate, choose and ke
 9. **No filler:** every line raises the stakes, reveals something, or makes a choice.
 10. **The 12-year-old test:** every choice makes sense with no explanation.
 
-**Write numbers twice.** In `lines.json`, `text` is the caption form ("11:58 PM") and `say` is the spoken form ("eleven fifty-eight P M"). `voice.py` speaks `say` and puts the times on the `text` words.
+**Write numbers twice.** In `lines.json`, `text` is the caption form ("23:58") and `say` is the spoken form ("vinte e três e cinquenta e oito"). `voice.py` speaks `say` and puts the times on the `text` words.
 
 ## 4. Look
 
@@ -113,7 +120,7 @@ Build every set once at load as a `THREE.Group` in `stage.sets`, and switch betw
 
 **The overlay**, drawn on the 2D canvas after `stage.draw(t)`:
 - `hud(c, day, clock)`;
-- `chunkCaptions(TIMING)` builds the caption chunks by meaning: 1 to 3 chunky words, broken at punctuation and before a phrase starts, never ending on a function word (of, the, your, to...), with a time ("2:14 AM") or a number and its unit ("150 liters") kept together. Set `window.CHUNKS` to the result and draw it last with `drawCaptions(c, CHUNKS, t)`. `render.py` refuses a full render if a chunk ends on a function word.
+- `chunkCaptions(TIMING)` builds the caption chunks by meaning: 1 to 3 chunky words, broken at punctuation and before a phrase starts, never ending on a function word (of, the, your, to...), with a time ("23:58") or a number and its unit ("40 litros") kept together. Set `window.CHUNKS` to the result and draw it last with `drawCaptions(c, CHUNKS, t)`. `render.py` refuses a full render if a chunk ends on a function word.
 - `ruleSticker(c, n, lines, k)`;
 - `phone(c, draw)`: phone screens are drawn in 2D;
 - `endCard(c, t0, t, question, greenOption, redOption, nextDay)`.
@@ -144,12 +151,12 @@ Build every set once at load as a `THREE.Group` in `stage.sets`, and switch betw
 
 1. **Write `part1/lines.json`.** It has 20 to 30 lines: `text`, optional `say`, `pause` (the silence after the line), `key` (the accent word) and `voice` (for a character).
    ```json
-   {"voice": "am_michael", "speed": 1.1, "lines": [
-     {"text": "Imagine it's 11:58 PM, and the power dies.", "say": "Imagine it's eleven fifty-eight P M, and the power dies.", "key": {"dies": "red"}},
-     {"text": "Open up, I'm not bitten.", "voice": "bm_george"}]}
+   {"voice": "pm_alex", "speed": 1.1, "lang": "pt-br", "lines": [
+     {"text": "Imagina que são 23:58, e a luz acaba.", "say": "Imagina que são vinte e três e cinquenta e oito, e a luz acaba.", "key": {"acaba": "red"}},
+     {"text": "Abre aí, eu não fui mordido.", "voice": "pm_santa"}]}
    ```
-   - The narrator is `am_michael`.
-   - Characters: `bm_george`, `af_bella`, `bf_emma`, `am_puck`, `am_fenrir`. Keep them clearly different from the narrator.
+   - The narrator is `pm_alex`.
+   - Characters: `pm_santa`, `pf_dora`. Keep them clearly different from the narrator (a different voice, and a different `speed` if two characters must share one).
 2. **Voice.** Run `python engine/voice.py part1`. It voices each line, times every word with faster-whisper, and maps the times onto the caption words.
    - It warns if a caption word has no voice under it within 120 ms.
    - If the length is outside 58 to 85 s, cut or add lines.
@@ -176,7 +183,7 @@ Build every set once at load as a `THREE.Group` in `stage.sets`, and switch betw
      - does any counter fail to show its spoken number.
    - Fix, then re-check.
 5. **Check motion at the full frame rate before the full render.** Render 2 s around each cut (`--at` with 30 times a second) and look at them in order.
-6. **Sound.** Write `part1/sfx.json`, with one sound per event, keyed to words: `{"at": "knocks@12", "type": "knock"}`.
+6. **Sound.** Write `part1/sfx.json`, with one sound per event, keyed to words: `{"at": "batidas@12", "type": "knock"}` (the word as spoken in the line, accents included).
    - Mixkit types:
      - doors: knock, slam, creak, floorcreak, lock;
      - impacts: thud, hit, boom;
@@ -201,7 +208,7 @@ Build every set once at load as a `THREE.Group` in `stage.sets`, and switch betw
      - a pacing check.
    - Fix any PACING WARNING or STOP and encode again.
 8. **The cover.** Run `python engine/render.py "part1/film.html#cover" part1/cover`. In cover mode `seek` draws the strongest picture, a red pill with the story title, and a 2-line title of 2 to 4 words in the top third.
-9. **The post kit.** Write `part1/post.md`: the title, a caption (what happened, the rules, the fact, "comment A or B"), 5 hashtags and a pinned comment.
+9. **The post kit.** Write `part1/post.md` in Portuguese: the title, a caption (what happened, the rules, the fact, "comenta A ou B"), 5 hashtags and a pinned comment.
 10. **Clean up.** Delete `frames/`, `vo/` and `stills/`. Deliver `part1.mp4`, `cover.jpg` and `post.md`.
 
 **Part 2,** only when I ask, with the vote result:
@@ -219,7 +226,7 @@ Build every set once at load as a `THREE.Group` in `stage.sets`, and switch betw
 - **Fog swallows distant things.** Keep fog far for exteriors.
 - **Never judge from one frame every few seconds.** Check motion at the full frame rate around every cut.
 - **Check with numbers before every full render:** the cuts, the captions (`voice.py`'s 120 ms check and `render.py`'s chunk check) and the audio joints (`sound.py`'s dropout scan).
-- **Captions read by meaning:** "never open / the door / after dark", not "never open the / door after / dark".
+- **Captions read by meaning:** "nunca abra / a porta / depois das 22:00", not "nunca abra a / porta depois / das 22:00".
 - **Counters must land.** Every counter (a value, a clock, a percentage) reaches its final value no later than the word that says it, and stays on screen at least 0.5 s after. A card that fades mid-count shows a wrong number.
 - **Never use `ctx.filter` blur** on the 2D canvas: it crashes long renders.
 - **Keep `seek(t)` pure:** no `Date.now()`, no unseeded random, no animation loops. Physics is recorded once with `recordPhysics` and sampled by time.
@@ -471,24 +478,33 @@ export function applyPhysics(meshes, state) { meshes.forEach((m, i) => { const s
 
 // ---------- the 2D overlay ----------
 export const FONTS = ['700 70px Oswald', '700 40px "JetBrains Mono"', '700 120px Oswald'];
+// on-screen words (Brazilian Portuguese by default; set LABELS.day = 'DAY' etc. for English)
+export const LABELS = { day: 'DIA', rule: 'REGRA #', comment: 'COMENTE ABAIXO', follow: 'SIGA PARA O DIA' };
+// shrink a font until s fits maxW pixels (Portuguese words run longer than English ones)
+function fit(c, s, font, maxW) {
+  if (!maxW) return font; c.font = font; const w = c.measureText(s).width; if (w <= maxW) return font;
+  return font.replace(/(\d+)px/, (m, n) => Math.floor(n * maxW / w) + 'px');
+}
 export async function loadFonts() { for (const f of FONTS) await document.fonts.load(f); }
 function txt(c, s, x, y, font, fill, o = {}) {
-  c.font = font; c.textAlign = o.align || 'center'; c.textBaseline = 'middle';
+  font = fit(c, s, font, o.maxW); c.font = font; c.textAlign = o.align || 'center'; c.textBaseline = 'middle';
   if (o.stroke) { c.lineJoin = 'round'; c.lineWidth = o.stroke; c.strokeStyle = o.strokeColor || '#0b0c0f'; c.strokeText(s, x, y); }
   c.fillStyle = fill; c.fillText(s, x, y);
 }
 // the HUD, top-left, monospace: DAY n and a clock
 export function hud(c, day, clock, k = 1) {
   c.save(); c.globalAlpha = k; c.fillStyle = 'rgba(8,9,12,0.62)'; c.beginPath(); c.roundRect(40, 120, 330, 108, 18); c.fill();
-  txt(c, 'DAY ' + day, 70, 152, '700 34px "JetBrains Mono"', '#f3eee4', { align: 'left' });
-  txt(c, clock, 70, 198, '700 40px "JetBrains Mono"', '#ff5a4f', { align: 'left' }); c.restore();
+  txt(c, LABELS.day + ' ' + day, 70, 152, '700 34px "JetBrains Mono"', '#f3eee4', { align: 'left' });
+  txt(c, clock, 70, 198, '700 40px "JetBrains Mono"', '#ff5a4f', { align: 'left', maxW: 280 }); c.restore();
 }
 // captions: 1-3 words, chunky, the key word in an accent colour; words = [{w, key}] drawn centred at y
 export function caption(c, words, y = 1310, accent = '#ffcc4d') {
   c.save(); c.font = '700 74px Oswald'; const parts = words.map(w => ({ ...w, s: w.w.toUpperCase() }));
-  const sp = 22, widths = parts.map(p => c.measureText(p.s).width), total = widths.reduce((a, b) => a + b, 0) + sp * (parts.length - 1);
+  let sp = 22, widths = parts.map(p => c.measureText(p.s).width), total = widths.reduce((a, b) => a + b, 0) + sp * (parts.length - 1);
+  const k = Math.min(1, 980 / total), px = Math.floor(74 * k);              // long Portuguese chunks shrink to fit the frame
+  widths = widths.map(w => w * k); sp *= k; total *= k;
   let x = 540 - total / 2;
-  parts.forEach((p, i) => { txt(c, p.s, x + widths[i] / 2, y, '700 74px Oswald', p.key ? (p.color || accent) : '#ffffff', { stroke: 12 }); x += widths[i] + sp; });
+  parts.forEach((p, i) => { txt(c, p.s, x + widths[i] / 2, y, `700 ${px}px Oswald`, p.key ? (p.color || accent) : '#ffffff', { stroke: Math.round(12 * k) }); x += widths[i] + sp; });
   c.restore();
 }
 // the rule sticker: tilted, a red tab "RULE #n" and a big condensed title; k = 0..1 pop
@@ -496,9 +512,9 @@ export function ruleSticker(c, n, title, k, y = 520) {
   if (k <= 0) return; c.save(); c.translate(540, y); c.rotate(-0.06); c.scale(0.6 + 0.4 * clamp(k, 0, 1.2), 0.6 + 0.4 * clamp(k, 0, 1.2));
   c.fillStyle = '#f4f0e6'; c.shadowColor = 'rgba(0,0,0,0.45)'; c.shadowBlur = 30; c.beginPath(); c.roundRect(-400, -120, 800, 250, 22); c.fill(); c.shadowBlur = 0;
   c.fillStyle = '#d93b30'; c.beginPath(); c.roundRect(-400, -120, 260, 70, [22, 0, 22, 0]); c.fill();
-  txt(c, 'RULE #' + n, -270, -84, '700 44px Oswald', '#ffffff');
+  txt(c, LABELS.rule + n, -270, -84, '700 44px Oswald', '#ffffff', { maxW: 230 });
   const lines = Array.isArray(title) ? title : [title];
-  lines.forEach((s, i) => txt(c, s.toUpperCase(), 0, 0 + i * 80 - (lines.length - 1) * 30 + 10, '700 72px Oswald', '#14161b'));
+  lines.forEach((s, i) => txt(c, s.toUpperCase(), 0, i * 80 - (lines.length - 1) * 30 + 22, '700 72px Oswald', '#14161b', { maxW: 740 }));
   c.restore();
 }
 // the end card: a question and two options, green and red, then COMMENT BELOW and FOLLOW FOR DAY n
@@ -506,10 +522,10 @@ export function endCard(c, t0, t, q, optA, optB, nextDay) {
   const k = clamp(spring(t - t0), 0, 1.15);
   c.save(); c.fillStyle = 'rgba(6,7,10,0.86)'; c.fillRect(0, 0, W, H);
   c.translate(540, 900); c.scale(0.85 + 0.15 * k, 0.85 + 0.15 * k); c.translate(-540, -900);
-  (Array.isArray(q) ? q : [q]).forEach((s, i) => txt(c, s.toUpperCase(), 540, 560 + i * 110, '700 104px Oswald', '#ffffff', { stroke: 10 }));
-  const opt = (s, y, col) => { c.fillStyle = col; c.beginPath(); c.roundRect(170, y - 70, 740, 140, 30); c.fill(); txt(c, s.toUpperCase(), 540, y, '700 64px Oswald', '#ffffff'); };
+  (Array.isArray(q) ? q : [q]).forEach((s, i) => txt(c, s.toUpperCase(), 540, 560 + i * 110, '700 104px Oswald', '#ffffff', { stroke: 10, maxW: 980 }));
+  const opt = (s, y, col) => { c.fillStyle = col; c.beginPath(); c.roundRect(170, y - 70, 740, 140, 30); c.fill(); txt(c, s.toUpperCase(), 540, y, '700 64px Oswald', '#ffffff', { maxW: 690 }); };
   opt(optA, 900, '#2e9e57'); opt(optB, 1080, '#c8372d');
-  txt(c, 'COMMENT BELOW', 540, 1250, '700 56px Oswald', '#ffffff'); txt(c, 'FOLLOW FOR DAY ' + nextDay, 540, 1330, '700 46px Oswald', '#ffcc4d');
+  txt(c, LABELS.comment, 540, 1250, '700 56px Oswald', '#ffffff', { maxW: 980 }); txt(c, LABELS.follow + ' ' + nextDay, 540, 1330, '700 46px Oswald', '#ffcc4d', { maxW: 980 });
   c.restore();
 }
 // a phone held in POV: a 2D screen with two stick thumbs; draw(c, x, y, w, h) fills the screen
@@ -523,14 +539,26 @@ export function phone(c, draw, k = 1) {
 
 // ---------- caption chunks, by meaning ----------
 // Builds the caption chunks from TIMING (window.TIMING from voice.py): at most 3 words, broken at punctuation and before a
-// phrase starts, never ending on a function word ("of", "the", "your"...). A time ("2:14 AM") or a number with its unit
-// ("150 liters") stays together. Set window.CHUNKS to the result: render.py refuses a full render if a chunk ends badly.
+// phrase starts, never ending on a function word ("de", "a", "o", "seu", "que"... in Portuguese; "of", "the"... in English).
+// A time ("2:14 AM") or a number with its unit ("40 litros") stays together. The language comes from TIMING.lang
+// (default pt-br). Set window.CHUNKS to the result: render.py refuses a full render if a chunk ends badly.
 // keyColor: {red: '#ff4b3e', ...}; each line's `key` ({word: 'red'}) colours that word.
 export const FUNCTION_WORDS = new Set("a an the to of at for from with by into onto under about after before until behind through and or but nor so if as than that this these those is are was were be been it its it's i i'm you you're they're he she we they me him her us them my your his our their who which what when where while because".split(' '));
 export const PARTICLES = new Set('in on up off out down back away over'.split(' '));
-export function chunkCaptions(T, keyColor = { red: '#ff5a4f', yellow: '#ffcc4d', amber: '#ffcc4d', green: '#4fe08a', blue: '#5ab4ff' }) {
-  const bare = s => String(s).toLowerCase().replace(/[^a-z0-9':]/g, '');
-  const DET = new Set("a an the my your his her their our its this that these those every each some no one two three".split(' '));
+// Portuguese: articles, prepositions and their contractions, conjunctions, pronouns, possessives, demonstratives, linking verbs
+export const FUNCTION_WORDS_PT = new Set(("o a os as um uma uns umas de do da dos das em no na nos nas num numa ao à aos às " +
+  "por pelo pela pelos pelas para pra pro pras pros com sem sob até sobre entre após desde contra perante " +
+  "e ou mas nem que se como quando onde porque porquê pois enquanto embora caso então " +
+  "eu tu você vocês ele ela eles elas nós me te lhe lhes nos vos se seu sua seus suas meu minha meus minhas teu tua teus tuas " +
+  "nosso nossa nossos nossas dele dela deles delas este esta estes estas esse essa esses essas isso isto aquele aquela aquilo " +
+  "neste nesta nesse nessa naquele naquela deste desta desse dessa daquele daquela qual quais cujo cuja " +
+  "é são era eram foi foram ser está estão estava").split(' '));
+export function chunkCaptions(T, keyColor = { red: '#ff5a4f', yellow: '#ffcc4d', amber: '#ffcc4d', green: '#4fe08a', blue: '#5ab4ff' }, lang = T.lang || 'pt-br') {
+  const pt = /^pt/i.test(lang), FW = pt ? FUNCTION_WORDS_PT : FUNCTION_WORDS, PT_ = pt ? new Set() : PARTICLES;
+  const CL = pt ? new Set('me te se lhe lhes nos vos'.split(' ')) : new Set();   // clitics stick to their verb: "me deixa", never a break point
+  const bare = s => String(s).toLowerCase().replace(/[^\p{L}\p{N}':]/gu, '');      // keeps accents: "não", "você"
+  const DET = new Set(("a an the my your his her their our its this that these those every each some no one two three " +
+    "o os as um uma uns umas meu minha seu sua teu tua nosso nossa esse essa este esta aquele aquela cada todo toda dois duas três").split(' '));
   const isF = u => u.f;                                           // marked below: function words, and "in/on/up..." that start a phrase
   const out = [];
   T.lines.forEach((L, li) => {
@@ -541,18 +569,18 @@ export function chunkCaptions(T, keyColor = { red: '#ff5a4f', yellow: '#ffcc4d',
       const brk = /[.,;!:?]$/.test(same ? raw[i] : x.w), d = String(x.w).replace(/[.,;!:?]+$/, ''), k = keys[bare(d)];
       const wd = { w: d, s: x.s, e: x.e, key: !!k, color: k ? (keyColor[k] || k) : undefined }, prev = units[units.length - 1];
       const glue = prev && prev.ws.length === 1 && ((/^(AM|PM)$/i.test(d) && /\d:\d\d$/.test(prev.ws[0].w)) ||
-        (/^(liters?|litres?|days?|minutes?|hours?|seconds?|floors?|meters?|metres?|km|miles?|percent|%)$/i.test(d) && /^\d+([.,]\d+)?$/.test(prev.ws[0].w)));
+        (/^(liters?|litres?|days?|minutes?|hours?|seconds?|floors?|meters?|metres?|km|miles?|percent|%|litros?|dias?|minutos?|horas?|segundos?|andares|andar|metros?|quilômetros?|graus?|reais|anos?|vezes|pessoas?)$/i.test(d) && /^\d+([.,]\d+)?$/.test(prev.ws[0].w)));
       if (glue) { prev.ws.push(wd); prev.brk = brk; } else units.push({ ws: [wd], brk });
     });
     units.forEach((u, i) => { const b = bare(u.ws[0].w), nx = units[i + 1];
-      u.f = u.ws.length === 1 && (FUNCTION_WORDS.has(b) || (PARTICLES.has(b) && !u.brk && !!nx && (DET.has(bare(nx.ws[0].w)) || /^\d/.test(nx.ws[0].w)))); });
+      u.f = u.ws.length === 1 && (FW.has(b) || (PT_.has(b) && !u.brk && !!nx && (DET.has(bare(nx.ws[0].w)) || /^\d/.test(nx.ws[0].w)))); });
     const segs = [[]]; for (const u of units) { segs[segs.length - 1].push(u); if (u.brk) segs.push([]); }
     for (const sg of segs) {
       let cur = [], n = 0;
       for (const u of sg) {
         if (n && n + u.ws.length > 3) {                          // break before the last phrase start, else after a content word
           let j = -1;
-          if (!(isF(u) && !isF(cur[cur.length - 1]))) for (let k = cur.length - 1; k >= 1; k--) if (isF(cur[k]) && !isF(cur[k - 1])) { j = k; break; }
+          if (!(isF(u) && !isF(cur[cur.length - 1]))) for (let k = cur.length - 1; k >= 1; k--) if (isF(cur[k]) && !isF(cur[k - 1]) && !CL.has(bare(cur[k].ws[0].w))) { j = k; break; }
           if (j > 0) { out.push({ li, words: cur.slice(0, j).flatMap(x => x.ws) }); cur = cur.slice(j); }
           else if (!isF(cur[cur.length - 1])) { out.push({ li, words: cur.flatMap(x => x.ws) }); cur = []; }
           n = cur.reduce((a, x) => a + x.ws.length, 0);
@@ -564,7 +592,7 @@ export function chunkCaptions(T, keyColor = { red: '#ff5a4f', yellow: '#ffcc4d',
   });
   for (let i = out.length - 1; i > 0; i--) {                     // a lone particle ("snowed / in") joins the words before it
     const a = out[i - 1], b = out[i];
-    if (b.words.length === 1 && PARTICLES.has(bare(b.words[0].w)) && a.li === b.li) { a.words.push(b.words[0]); out.splice(i, 1); }
+    if (b.words.length === 1 && PT_.has(bare(b.words[0].w)) && a.li === b.li) { a.words.push(b.words[0]); out.splice(i, 1); }
   }
   out.forEach((c, i) => { c.s = c.words[0].s - 0.04; const nx = out[i + 1]; c.e = nx && nx.li === c.li ? nx.words[0].s - 0.04 : Math.min(T.lines[c.li].end + 0.3, nx ? nx.words[0].s - 0.06 : 1e9); });
   return out;
@@ -618,7 +646,16 @@ def main():
         chunks = page.evaluate("(window.CHUNKS || []).map(c => (c.words || []).map(w => String(w.w || w)))")
         FUNC = set("a an the to of at for from with by into onto under about after before until behind through and or but nor so if as than that this these those is are was were be been it its it's i i'm you you're they're he she we they me him her us them my your his our their who which what when where while because".split())
         PART = set("in on up off out down back away over".split())    # a verb's particle may end a chunk ("snowed in"), never alone
-        bad = [" ".join(c) for c in chunks if c and (c[-1].lower().strip(".,!?;:\"'") in FUNC or (len(c) == 1 and c[0].lower() in PART))]
+        lang = page.evaluate("(window.TIMING && window.TIMING.lang) || 'pt-br'")
+        if lang.lower().startswith("pt"):                              # Brazilian Portuguese: the same list as stage.js FUNCTION_WORDS_PT
+            FUNC = set(("o a os as um uma uns umas de do da dos das em no na nos nas num numa ao à aos às "
+                "por pelo pela pelos pelas para pra pro pras pros com sem sob até sobre entre após desde contra perante "
+                "e ou mas nem que se como quando onde porque porquê pois enquanto embora caso então "
+                "eu tu você vocês ele ela eles elas nós me te lhe lhes nos vos se seu sua seus suas meu minha meus minhas teu tua teus tuas "
+                "nosso nossa nossos nossas dele dela deles delas este esta estes estas esse essa esses essas isso isto aquele aquela aquilo "
+                "neste nesta nesse nessa naquele naquela deste desta desse dessa daquele daquela qual quais cujo cuja "
+                "é são era eram foi foram ser está estão estava").split()); PART = set()
+        bad = [" ".join(c) for c in chunks if c and (c[-1].lower().strip(".,!?;:\"'«»“”—…") in FUNC or (len(c) == 1 and c[0].lower() in PART))]
         if not chunks: print("CAPTION CHECK: the page has no window.CHUNKS, so the caption chunks can't be checked")
         elif bad and at is None and "--force" not in a: sys.exit("CAPTION CHUNK FAIL (a caption ends on a function word; chunk by meaning): " + " | ".join(bad[:10]))
         else: print(f"caption chunks: {len(chunks)}, {len(bad)} ending on a function word")
@@ -644,12 +681,14 @@ if __name__ == "__main__":
 ### engine/voice.py
 ```python
 """voice.py PART_DIR : lines.json -> narration.wav + timing.js (the time of every word, for captions and animation)
-Each line has "text" (the caption form: "11:58 PM") and optionally "say" (the spoken form: "eleven fifty-eight P M").
-Main voice: Kokoro-82M, a free open model that runs on this computer's CPU. Word times come from faster-whisper, also local.
+Each line has "text" (the caption form: "23:58") and optionally "say" (the spoken form: "vinte e três e cinquenta e oito").
+Language: "lang" in lines.json, default "pt-br" (Brazilian Portuguese). pt-br voices: pm_alex (narrator), pm_santa, pf_dora.
+Main voice: Kokoro-82M, a free open model that runs on this computer's CPU. Word times come from faster-whisper, also local
+(the multilingual "base" model for pt-br, "base.en" for English).
 If Kokoro can't run, it falls back by itself to edge-tts (a free online voice), then to the computer's own voice
 (Windows SAPI, macOS say, Linux espeak-ng). Force one with "engine": "kokoro" | "edge" | "offline" in lines.json.
 needs: pip install kokoro-onnx soundfile faster-whisper edge-tts imageio-ffmpeg numpy  (models download on the first run)"""
-import asyncio, difflib, json, os, platform, re, shutil, subprocess, sys, tempfile, urllib.request, wave
+import asyncio, difflib, json, os, platform, re, shutil, subprocess, sys, tempfile, unicodedata, urllib.request, wave
 import numpy as np
 SR = 48000
 HERE = os.path.dirname(os.path.abspath(__file__)); MODELS = os.path.join(HERE, "models")
@@ -662,7 +701,8 @@ def ffmpeg():
 FF = ffmpeg()
 part = sys.argv[1]
 spec = json.load(open(os.path.join(part, "lines.json"), encoding="utf-8"))
-VOICE, SPEED = spec.get("voice", "am_michael"), float(spec.get("speed", 1.1))
+LANG = spec.get("lang", "pt-br").lower(); WLANG = LANG.split("-")[0]           # "pt-br" -> whisper language "pt"
+VOICE, SPEED = spec.get("voice", "pm_alex" if WLANG == "pt" else "am_michael"), float(spec.get("speed", 1.1))
 engine = os.environ.get("VOICE_ENGINE", spec.get("engine", "kokoro"))
 os.makedirs(os.path.join(part, "vo"), exist_ok=True); os.makedirs(MODELS, exist_ok=True)
 
@@ -685,13 +725,15 @@ def whisper():
     global _w
     if _w is None:
         from faster_whisper import WhisperModel, download_model
-        d = os.path.join(MODELS, "whisper-base.en")
-        if not os.path.exists(os.path.join(d, "model.bin")): print("downloading the timing model (once)"); download_model("base.en", output_dir=d)
+        name = "base.en" if WLANG == "en" else "base"                        # base.en only knows English
+        d = os.path.join(MODELS, "whisper-" + name)
+        if not os.path.exists(os.path.join(d, "model.bin")): print("downloading the timing model (once)"); download_model(name, output_dir=d)
         _w = WhisperModel(d, device="cpu", compute_type="int8")
     return _w
 
-def norm(w): return re.sub(r"[^a-z0-9]", "", w.lower())
-def clean(w): return w.strip(".,!?;\"()[]").rstrip(".")
+def norm(w):                                            # accents off for matching: "não" == "nao", "você" == "voce"
+    w = unicodedata.normalize("NFD", w.lower()); return re.sub(r"[^a-z0-9]", "", "".join(c for c in w if not unicodedata.combining(c)))
+def clean(w): return w.strip(".,!?;\"()[]«»“”—…").rstrip(".")
 
 def estimate(text, raw):
     """word times in proportion to word length, inside the voiced part of the line"""
@@ -706,7 +748,7 @@ def align(text, raw):
     """word times from faster-whisper, matched back to the script's own words"""
     try:
         audio = np.frombuffer(raw, np.int16).astype(np.float32)[::3] / 32768      # 48 kHz -> 16 kHz
-        segs, _ = whisper().transcribe(audio, language="en", word_timestamps=True, beam_size=1, initial_prompt=text)
+        segs, _ = whisper().transcribe(audio, language=WLANG, word_timestamps=True, beam_size=1, initial_prompt=text)
         heard = [(w.word, w.start, w.end) for s in segs for w in s.words]
     except Exception as e:
         print("word timing fell back to an estimate:", e); return estimate(text, raw)
@@ -732,7 +774,8 @@ def align(text, raw):
 
 async def edge(text, voice, path):
     import edge_tts
-    if re.match(r"^[ab][fm]_", voice): voice = "en-US-AvaNeural" if voice[1] == "f" else "en-US-AndrewNeural"
+    if re.match(r"^p[fm]_", voice): voice = "pt-BR-FranciscaNeural" if voice[1] == "f" else "pt-BR-AntonioNeural"
+    elif re.match(r"^[ab][fm]_", voice): voice = "en-US-AvaNeural" if voice[1] == "f" else "en-US-AndrewNeural"
     for attempt in range(3):
         try:
             words, audio = [], bytearray()
@@ -751,15 +794,15 @@ def offline(text, path):
         ps = ("Add-Type -AssemblyName System.Speech; $s = New-Object System.Speech.Synthesis.SpeechSynthesizer; $s.Rate = 1; "
               f"$s.SetOutputToWaveFile('{path}'); $s.Speak([IO.File]::ReadAllText('{txt}')); $s.Dispose()")
         subprocess.run(["powershell", "-NoProfile", "-Command", ps], check=True)
-    elif platform.system() == "Darwin": subprocess.run(["say", "-f", txt, "-o", path, "--data-format=LEI16@22050"], check=True)
-    else: subprocess.run(["espeak-ng", "-f", txt, "-w", path], check=True)
+    elif platform.system() == "Darwin": subprocess.run(["say"] + (["-v", "Luciana"] if WLANG == "pt" else []) + ["-f", txt, "-o", path, "--data-format=LEI16@22050"], check=True)
+    else: subprocess.run(["espeak-ng", "-v", LANG, "-f", txt, "-w", path], check=True)
 
 async def speak(i, line):
     """one line -> (pcm at 48 kHz, word boundaries relative to that pcm)"""
     text, path = line.get("say", line["text"]).strip(), os.path.join(part, "vo", f"line{i:02d}")
     if engine == "kokoro":
         import soundfile as sf
-        a, sr = kokoro().create(text, voice=line.get("voice", VOICE), speed=float(line.get("speed", SPEED)), lang="en-us")
+        a, sr = kokoro().create(text, voice=line.get("voice", VOICE), speed=float(line.get("speed", SPEED)), lang=line.get("lang", LANG))
         sf.write(path + ".wav", a, sr); raw = decode(path + ".wav"); return raw, align(text, raw)
     if engine == "edge":
         bounds = await edge(text, line.get("voice", VOICE), path + ".mp3"); return decode(path + ".mp3"), bounds
@@ -810,12 +853,12 @@ async def main():
     with wave.open(os.path.join(part, "narration.wav"), "wb") as w:
         w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes(bytes(pcm))
     open(os.path.join(part, "timing.js"), "w", encoding="utf-8").write(
-        "window.TIMING = " + json.dumps({"voice_end": round(cursor, 3), "engine": engine, "lines": out}) + ";\n")
+        "window.TIMING = " + json.dumps({"voice_end": round(cursor, 3), "engine": engine, "lang": LANG, "lines": out}, ensure_ascii=False) + ";\n")
     x = np.frombuffer(bytes(pcm), np.int16).astype(np.float32) / 32768        # every caption word must have voice under it
     bad = [w["w"] for l in out for w in l["words"] if np.sqrt(np.mean(x[max(0, int((w["s"] - 0.12) * SR)):int((w["s"] + 0.12) * SR)] ** 2)) < 0.004]
     print("caption check: OK" if not bad else f"CAPTION WARNING: no voice within 120 ms of: {', '.join(bad[:8])}")
     n = sum(len(l["words"]) for l in out)
-    print(f"narration {cursor:.2f} s, {n} words, {n / cursor * 60:.0f} words per minute, voice: {engine}")
+    print(f"narration {cursor:.2f} s, {n} words, {n / cursor * 60:.0f} words per minute, voice: {engine}, language: {LANG}")
 
 asyncio.run(main())
 ```

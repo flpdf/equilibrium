@@ -217,24 +217,33 @@ export function applyPhysics(meshes, state) { meshes.forEach((m, i) => { const s
 
 // ---------- the 2D overlay ----------
 export const FONTS = ['700 70px Oswald', '700 40px "JetBrains Mono"', '700 120px Oswald'];
+// on-screen words (Brazilian Portuguese by default; set LABELS.day = 'DAY' etc. for English)
+export const LABELS = { day: 'DIA', rule: 'REGRA #', comment: 'COMENTE ABAIXO', follow: 'SIGA PARA O DIA' };
+// shrink a font until s fits maxW pixels (Portuguese words run longer than English ones)
+function fit(c, s, font, maxW) {
+  if (!maxW) return font; c.font = font; const w = c.measureText(s).width; if (w <= maxW) return font;
+  return font.replace(/(\d+)px/, (m, n) => Math.floor(n * maxW / w) + 'px');
+}
 export async function loadFonts() { for (const f of FONTS) await document.fonts.load(f); }
 function txt(c, s, x, y, font, fill, o = {}) {
-  c.font = font; c.textAlign = o.align || 'center'; c.textBaseline = 'middle';
+  font = fit(c, s, font, o.maxW); c.font = font; c.textAlign = o.align || 'center'; c.textBaseline = 'middle';
   if (o.stroke) { c.lineJoin = 'round'; c.lineWidth = o.stroke; c.strokeStyle = o.strokeColor || '#0b0c0f'; c.strokeText(s, x, y); }
   c.fillStyle = fill; c.fillText(s, x, y);
 }
 // the HUD, top-left, monospace: DAY n and a clock
 export function hud(c, day, clock, k = 1) {
   c.save(); c.globalAlpha = k; c.fillStyle = 'rgba(8,9,12,0.62)'; c.beginPath(); c.roundRect(40, 120, 330, 108, 18); c.fill();
-  txt(c, 'DAY ' + day, 70, 152, '700 34px "JetBrains Mono"', '#f3eee4', { align: 'left' });
-  txt(c, clock, 70, 198, '700 40px "JetBrains Mono"', '#ff5a4f', { align: 'left' }); c.restore();
+  txt(c, LABELS.day + ' ' + day, 70, 152, '700 34px "JetBrains Mono"', '#f3eee4', { align: 'left' });
+  txt(c, clock, 70, 198, '700 40px "JetBrains Mono"', '#ff5a4f', { align: 'left', maxW: 280 }); c.restore();
 }
 // captions: 1-3 words, chunky, the key word in an accent colour; words = [{w, key}] drawn centred at y
 export function caption(c, words, y = 1310, accent = '#ffcc4d') {
   c.save(); c.font = '700 74px Oswald'; const parts = words.map(w => ({ ...w, s: w.w.toUpperCase() }));
-  const sp = 22, widths = parts.map(p => c.measureText(p.s).width), total = widths.reduce((a, b) => a + b, 0) + sp * (parts.length - 1);
+  let sp = 22, widths = parts.map(p => c.measureText(p.s).width), total = widths.reduce((a, b) => a + b, 0) + sp * (parts.length - 1);
+  const k = Math.min(1, 980 / total), px = Math.floor(74 * k);              // long Portuguese chunks shrink to fit the frame
+  widths = widths.map(w => w * k); sp *= k; total *= k;
   let x = 540 - total / 2;
-  parts.forEach((p, i) => { txt(c, p.s, x + widths[i] / 2, y, '700 74px Oswald', p.key ? (p.color || accent) : '#ffffff', { stroke: 12 }); x += widths[i] + sp; });
+  parts.forEach((p, i) => { txt(c, p.s, x + widths[i] / 2, y, `700 ${px}px Oswald`, p.key ? (p.color || accent) : '#ffffff', { stroke: Math.round(12 * k) }); x += widths[i] + sp; });
   c.restore();
 }
 // the rule sticker: tilted, a red tab "RULE #n" and a big condensed title; k = 0..1 pop
@@ -242,9 +251,9 @@ export function ruleSticker(c, n, title, k, y = 520) {
   if (k <= 0) return; c.save(); c.translate(540, y); c.rotate(-0.06); c.scale(0.6 + 0.4 * clamp(k, 0, 1.2), 0.6 + 0.4 * clamp(k, 0, 1.2));
   c.fillStyle = '#f4f0e6'; c.shadowColor = 'rgba(0,0,0,0.45)'; c.shadowBlur = 30; c.beginPath(); c.roundRect(-400, -120, 800, 250, 22); c.fill(); c.shadowBlur = 0;
   c.fillStyle = '#d93b30'; c.beginPath(); c.roundRect(-400, -120, 260, 70, [22, 0, 22, 0]); c.fill();
-  txt(c, 'RULE #' + n, -270, -84, '700 44px Oswald', '#ffffff');
+  txt(c, LABELS.rule + n, -270, -84, '700 44px Oswald', '#ffffff', { maxW: 230 });
   const lines = Array.isArray(title) ? title : [title];
-  lines.forEach((s, i) => txt(c, s.toUpperCase(), 0, 0 + i * 80 - (lines.length - 1) * 30 + 10, '700 72px Oswald', '#14161b'));
+  lines.forEach((s, i) => txt(c, s.toUpperCase(), 0, i * 80 - (lines.length - 1) * 30 + 22, '700 72px Oswald', '#14161b', { maxW: 740 }));
   c.restore();
 }
 // the end card: a question and two options, green and red, then COMMENT BELOW and FOLLOW FOR DAY n
@@ -252,10 +261,10 @@ export function endCard(c, t0, t, q, optA, optB, nextDay) {
   const k = clamp(spring(t - t0), 0, 1.15);
   c.save(); c.fillStyle = 'rgba(6,7,10,0.86)'; c.fillRect(0, 0, W, H);
   c.translate(540, 900); c.scale(0.85 + 0.15 * k, 0.85 + 0.15 * k); c.translate(-540, -900);
-  (Array.isArray(q) ? q : [q]).forEach((s, i) => txt(c, s.toUpperCase(), 540, 560 + i * 110, '700 104px Oswald', '#ffffff', { stroke: 10 }));
-  const opt = (s, y, col) => { c.fillStyle = col; c.beginPath(); c.roundRect(170, y - 70, 740, 140, 30); c.fill(); txt(c, s.toUpperCase(), 540, y, '700 64px Oswald', '#ffffff'); };
+  (Array.isArray(q) ? q : [q]).forEach((s, i) => txt(c, s.toUpperCase(), 540, 560 + i * 110, '700 104px Oswald', '#ffffff', { stroke: 10, maxW: 980 }));
+  const opt = (s, y, col) => { c.fillStyle = col; c.beginPath(); c.roundRect(170, y - 70, 740, 140, 30); c.fill(); txt(c, s.toUpperCase(), 540, y, '700 64px Oswald', '#ffffff', { maxW: 690 }); };
   opt(optA, 900, '#2e9e57'); opt(optB, 1080, '#c8372d');
-  txt(c, 'COMMENT BELOW', 540, 1250, '700 56px Oswald', '#ffffff'); txt(c, 'FOLLOW FOR DAY ' + nextDay, 540, 1330, '700 46px Oswald', '#ffcc4d');
+  txt(c, LABELS.comment, 540, 1250, '700 56px Oswald', '#ffffff', { maxW: 980 }); txt(c, LABELS.follow + ' ' + nextDay, 540, 1330, '700 46px Oswald', '#ffcc4d', { maxW: 980 });
   c.restore();
 }
 // a phone held in POV: a 2D screen with two stick thumbs; draw(c, x, y, w, h) fills the screen
@@ -269,14 +278,26 @@ export function phone(c, draw, k = 1) {
 
 // ---------- caption chunks, by meaning ----------
 // Builds the caption chunks from TIMING (window.TIMING from voice.py): at most 3 words, broken at punctuation and before a
-// phrase starts, never ending on a function word ("of", "the", "your"...). A time ("2:14 AM") or a number with its unit
-// ("150 liters") stays together. Set window.CHUNKS to the result: render.py refuses a full render if a chunk ends badly.
+// phrase starts, never ending on a function word ("de", "a", "o", "seu", "que"... in Portuguese; "of", "the"... in English).
+// A time ("2:14 AM") or a number with its unit ("40 litros") stays together. The language comes from TIMING.lang
+// (default pt-br). Set window.CHUNKS to the result: render.py refuses a full render if a chunk ends badly.
 // keyColor: {red: '#ff4b3e', ...}; each line's `key` ({word: 'red'}) colours that word.
 export const FUNCTION_WORDS = new Set("a an the to of at for from with by into onto under about after before until behind through and or but nor so if as than that this these those is are was were be been it its it's i i'm you you're they're he she we they me him her us them my your his our their who which what when where while because".split(' '));
 export const PARTICLES = new Set('in on up off out down back away over'.split(' '));
-export function chunkCaptions(T, keyColor = { red: '#ff5a4f', yellow: '#ffcc4d', amber: '#ffcc4d', green: '#4fe08a', blue: '#5ab4ff' }) {
-  const bare = s => String(s).toLowerCase().replace(/[^a-z0-9':]/g, '');
-  const DET = new Set("a an the my your his her their our its this that these those every each some no one two three".split(' '));
+// Portuguese: articles, prepositions and their contractions, conjunctions, pronouns, possessives, demonstratives, linking verbs
+export const FUNCTION_WORDS_PT = new Set(("o a os as um uma uns umas de do da dos das em no na nos nas num numa ao à aos às " +
+  "por pelo pela pelos pelas para pra pro pras pros com sem sob até sobre entre após desde contra perante " +
+  "e ou mas nem que se como quando onde porque porquê pois enquanto embora caso então " +
+  "eu tu você vocês ele ela eles elas nós me te lhe lhes nos vos se seu sua seus suas meu minha meus minhas teu tua teus tuas " +
+  "nosso nossa nossos nossas dele dela deles delas este esta estes estas esse essa esses essas isso isto aquele aquela aquilo " +
+  "neste nesta nesse nessa naquele naquela deste desta desse dessa daquele daquela qual quais cujo cuja " +
+  "é são era eram foi foram ser está estão estava").split(' '));
+export function chunkCaptions(T, keyColor = { red: '#ff5a4f', yellow: '#ffcc4d', amber: '#ffcc4d', green: '#4fe08a', blue: '#5ab4ff' }, lang = T.lang || 'pt-br') {
+  const pt = /^pt/i.test(lang), FW = pt ? FUNCTION_WORDS_PT : FUNCTION_WORDS, PT_ = pt ? new Set() : PARTICLES;
+  const CL = pt ? new Set('me te se lhe lhes nos vos'.split(' ')) : new Set();   // clitics stick to their verb: "me deixa", never a break point
+  const bare = s => String(s).toLowerCase().replace(/[^\p{L}\p{N}':]/gu, '');      // keeps accents: "não", "você"
+  const DET = new Set(("a an the my your his her their our its this that these those every each some no one two three " +
+    "o os as um uma uns umas meu minha seu sua teu tua nosso nossa esse essa este esta aquele aquela cada todo toda dois duas três").split(' '));
   const isF = u => u.f;                                           // marked below: function words, and "in/on/up..." that start a phrase
   const out = [];
   T.lines.forEach((L, li) => {
@@ -287,18 +308,18 @@ export function chunkCaptions(T, keyColor = { red: '#ff5a4f', yellow: '#ffcc4d',
       const brk = /[.,;!:?]$/.test(same ? raw[i] : x.w), d = String(x.w).replace(/[.,;!:?]+$/, ''), k = keys[bare(d)];
       const wd = { w: d, s: x.s, e: x.e, key: !!k, color: k ? (keyColor[k] || k) : undefined }, prev = units[units.length - 1];
       const glue = prev && prev.ws.length === 1 && ((/^(AM|PM)$/i.test(d) && /\d:\d\d$/.test(prev.ws[0].w)) ||
-        (/^(liters?|litres?|days?|minutes?|hours?|seconds?|floors?|meters?|metres?|km|miles?|percent|%)$/i.test(d) && /^\d+([.,]\d+)?$/.test(prev.ws[0].w)));
+        (/^(liters?|litres?|days?|minutes?|hours?|seconds?|floors?|meters?|metres?|km|miles?|percent|%|litros?|dias?|minutos?|horas?|segundos?|andares|andar|metros?|quilômetros?|graus?|reais|anos?|vezes|pessoas?)$/i.test(d) && /^\d+([.,]\d+)?$/.test(prev.ws[0].w)));
       if (glue) { prev.ws.push(wd); prev.brk = brk; } else units.push({ ws: [wd], brk });
     });
     units.forEach((u, i) => { const b = bare(u.ws[0].w), nx = units[i + 1];
-      u.f = u.ws.length === 1 && (FUNCTION_WORDS.has(b) || (PARTICLES.has(b) && !u.brk && !!nx && (DET.has(bare(nx.ws[0].w)) || /^\d/.test(nx.ws[0].w)))); });
+      u.f = u.ws.length === 1 && (FW.has(b) || (PT_.has(b) && !u.brk && !!nx && (DET.has(bare(nx.ws[0].w)) || /^\d/.test(nx.ws[0].w)))); });
     const segs = [[]]; for (const u of units) { segs[segs.length - 1].push(u); if (u.brk) segs.push([]); }
     for (const sg of segs) {
       let cur = [], n = 0;
       for (const u of sg) {
         if (n && n + u.ws.length > 3) {                          // break before the last phrase start, else after a content word
           let j = -1;
-          if (!(isF(u) && !isF(cur[cur.length - 1]))) for (let k = cur.length - 1; k >= 1; k--) if (isF(cur[k]) && !isF(cur[k - 1])) { j = k; break; }
+          if (!(isF(u) && !isF(cur[cur.length - 1]))) for (let k = cur.length - 1; k >= 1; k--) if (isF(cur[k]) && !isF(cur[k - 1]) && !CL.has(bare(cur[k].ws[0].w))) { j = k; break; }
           if (j > 0) { out.push({ li, words: cur.slice(0, j).flatMap(x => x.ws) }); cur = cur.slice(j); }
           else if (!isF(cur[cur.length - 1])) { out.push({ li, words: cur.flatMap(x => x.ws) }); cur = []; }
           n = cur.reduce((a, x) => a + x.ws.length, 0);
@@ -310,7 +331,7 @@ export function chunkCaptions(T, keyColor = { red: '#ff5a4f', yellow: '#ffcc4d',
   });
   for (let i = out.length - 1; i > 0; i--) {                     // a lone particle ("snowed / in") joins the words before it
     const a = out[i - 1], b = out[i];
-    if (b.words.length === 1 && PARTICLES.has(bare(b.words[0].w)) && a.li === b.li) { a.words.push(b.words[0]); out.splice(i, 1); }
+    if (b.words.length === 1 && PT_.has(bare(b.words[0].w)) && a.li === b.li) { a.words.push(b.words[0]); out.splice(i, 1); }
   }
   out.forEach((c, i) => { c.s = c.words[0].s - 0.04; const nx = out[i + 1]; c.e = nx && nx.li === c.li ? nx.words[0].s - 0.04 : Math.min(T.lines[c.li].end + 0.3, nx ? nx.words[0].s - 0.06 : 1e9); });
   return out;
