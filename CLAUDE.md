@@ -415,7 +415,7 @@ export class Stickman {
     this.mesh = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: this.tex, alphaTest: 0.5, side: THREE.DoubleSide, emissive: '#ffffff', emissiveMap: this.tex, emissiveIntensity: this.o.glow, roughness: 1 }));
     this.mesh.castShadow = true;
     this.mesh.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: this.tex, alphaTest: 0.5 });
-    this.mesh.userData.billboard = cam => { const p = new THREE.Vector3(); cam.getWorldPosition(p); this.mesh.rotation.y = Math.atan2(p.x - this.mesh.position.x, p.z - this.mesh.position.z); };
+    this.mesh.userData.billboard = cam => { const p = new THREE.Vector3(), q = new THREE.Vector3(); cam.getWorldPosition(p); this.mesh.getWorldPosition(q); this.mesh.rotation.y = Math.atan2(p.x - q.x, p.z - q.z); };   // world positions: works inside a moved set
     this.pose({});
   }
   // p: {facing: 1 right / -1 left / 0 front, lean, headTilt, armL: [shoulder, elbow], armR, legL: [hip, knee], legR, feet: [[x,y],[x,y]] (IK, canvas px), mood: 'scared'}
@@ -545,14 +545,16 @@ export function phone(c, draw, k = 1) {
 // keyColor: {red: '#ff4b3e', ...}; each line's `key` ({word: 'red'}) colours that word.
 export const FUNCTION_WORDS = new Set("a an the to of at for from with by into onto under about after before until behind through and or but nor so if as than that this these those is are was were be been it its it's i i'm you you're they're he she we they me him her us them my your his our their who which what when where while because".split(' '));
 export const PARTICLES = new Set('in on up off out down back away over'.split(' '));
-// Portuguese: articles, prepositions and their contractions, conjunctions, pronouns, possessives, demonstratives, linking verbs
+// Portuguese: articles, prepositions and their contractions, conjunctions, unstressed pronouns, possessives, demonstratives,
+// (stressed pronouns end a phrase fine: "com você", "o nome dela"; a capital letter mid-line is a name: "Bloco A")
+// and "não"/"já", which lean on the verb after them ("O cartão / não passa", never "O cartão não / passa")
 export const FUNCTION_WORDS_PT = new Set(("o a os as um uma uns umas de do da dos das em no na nos nas num numa ao à aos às " +
   "por pelo pela pelos pelas para pra pro pras pros com sem sob até sobre entre após desde contra perante " +
   "e ou mas nem que se como quando onde porque porquê pois enquanto embora caso então " +
-  "eu tu você vocês ele ela eles elas nós me te lhe lhes nos vos se seu sua seus suas meu minha meus minhas teu tua teus tuas " +
-  "nosso nossa nossos nossas dele dela deles delas este esta estes estas esse essa esses essas isso isto aquele aquela aquilo " +
+  "eu tu me te lhe lhes nos vos se seu sua seus suas meu minha meus minhas teu tua teus tuas " +
+  "nosso nossa nossos nossas este esta estes estas esse essa esses essas isso isto aquele aquela aquilo " +
   "neste nesta nesse nessa naquele naquela deste desta desse dessa daquele daquela qual quais cujo cuja " +
-  "é são era eram foi foram ser está estão estava").split(' '));
+  "não já").split(' '));
 export function chunkCaptions(T, keyColor = { red: '#ff5a4f', yellow: '#ffcc4d', amber: '#ffcc4d', green: '#4fe08a', blue: '#5ab4ff' }, lang = T.lang || 'pt-br') {
   const pt = /^pt/i.test(lang), FW = pt ? FUNCTION_WORDS_PT : FUNCTION_WORDS, PT_ = pt ? new Set() : PARTICLES;
   const CL = pt ? new Set('me te se lhe lhes nos vos'.split(' ')) : new Set();   // clitics stick to their verb: "me deixa", never a break point
@@ -573,7 +575,7 @@ export function chunkCaptions(T, keyColor = { red: '#ff5a4f', yellow: '#ffcc4d',
       if (glue) { prev.ws.push(wd); prev.brk = brk; } else units.push({ ws: [wd], brk });
     });
     units.forEach((u, i) => { const b = bare(u.ws[0].w), nx = units[i + 1];
-      u.f = u.ws.length === 1 && (FW.has(b) || (PT_.has(b) && !u.brk && !!nx && (DET.has(bare(nx.ws[0].w)) || /^\d/.test(nx.ws[0].w)))); });
+      u.f = u.ws.length === 1 && !(pt && i > 0 && /^[A-Z]$/.test(u.ws[0].w)) && (FW.has(b) || (PT_.has(b) && !u.brk && !!nx && (DET.has(bare(nx.ws[0].w)) || /^\d/.test(nx.ws[0].w)))); });
     const segs = [[]]; for (const u of units) { segs[segs.length - 1].push(u); if (u.brk) segs.push([]); }
     for (const sg of segs) {
       let cur = [], n = 0;
@@ -651,11 +653,11 @@ def main():
             FUNC = set(("o a os as um uma uns umas de do da dos das em no na nos nas num numa ao à aos às "
                 "por pelo pela pelos pelas para pra pro pras pros com sem sob até sobre entre após desde contra perante "
                 "e ou mas nem que se como quando onde porque porquê pois enquanto embora caso então "
-                "eu tu você vocês ele ela eles elas nós me te lhe lhes nos vos se seu sua seus suas meu minha meus minhas teu tua teus tuas "
-                "nosso nossa nossos nossas dele dela deles delas este esta estes estas esse essa esses essas isso isto aquele aquela aquilo "
+                "eu tu me te lhe lhes nos vos se seu sua seus suas meu minha meus minhas teu tua teus tuas "
+                "nosso nossa nossos nossas este esta estes estas esse essa esses essas isso isto aquele aquela aquilo "
                 "neste nesta nesse nessa naquele naquela deste desta desse dessa daquele daquela qual quais cujo cuja "
-                "é são era eram foi foram ser está estão estava").split()); PART = set()
-        bad = [" ".join(c) for c in chunks if c and (c[-1].lower().strip(".,!?;:\"'«»“”—…") in FUNC or (len(c) == 1 and c[0].lower() in PART))]
+                "não já").split()); PART = set()
+        bad = [" ".join(c) for c in chunks if c and not (len(c) > 1 and len(c[-1]) == 1 and c[-1].isupper()) and (c[-1].lower().strip(".,!?;:\"'«»“”—…") in FUNC or (len(c) == 1 and c[0].lower() in PART))]
         if not chunks: print("CAPTION CHECK: the page has no window.CHUNKS, so the caption chunks can't be checked")
         elif bad and at is None and "--force" not in a: sys.exit("CAPTION CHUNK FAIL (a caption ends on a function word; chunk by meaning): " + " | ".join(bad[:10]))
         else: print(f"caption chunks: {len(chunks)}, {len(bad)} ending on a function word")

@@ -59,7 +59,7 @@ Notas de 1 a 5: P = "o que eu faria?", R = relógio correndo, S = segredo, L = l
 | 15 | N | Pelo olho mágico, só a lanterna dele. | | Fisheye: Jorge com lanterna |
 | 16 | Jorge | No Bloco A, quem disse que morava sozinho foi roubado. | | Fisheye: Jorge apontando para baixo |
 | 17 | Jorge | Esses alertas não são do governo. São deles. | | Close no seu rosto |
-| 18 | N | E você já respondeu. | | POV: a mensagem enviada |
+| 18 | N | Você já respondeu. | | POV: a mensagem enviada |
 | 19 | N | Jorge desce pra avisar o Bloco B. | | Escada escura, lanterna descendo |
 | 20 | N | A lanterna some. E ele não volta. | | A escada fica escura |
 | 21 | N | 03:20. Sirene. Luz azul no pátio. | Três e vinte… | Da janela: pátio com luz azul |

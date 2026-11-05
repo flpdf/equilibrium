@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>Alerta SP - Parte 1</title>
+<script type="importmap">{"imports":{"three":"../engine/vendor/three.module.js"}}</script>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=JetBrains+Mono:wght@700&display=block" rel="stylesheet">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+</head><body>
+<canvas id="film" width="1080" height="1920"></canvas>
+<script src="timing.js"></script>
+<script type="module">
+import { THREE, createStage, room, door, box, mat, wallWithHoles, practical, coldFill, accent, tower, Stickman,
+  hud, ruleSticker, endCard, phone, loadFonts, chunkCaptions, drawCaptions, clamp, lerp, ease, spring, rng } from '../engine/stage.js';
+
+const COVER = location.hash === '#cover';
+const stage = createStage(document.getElementById('film'));
+const { scene } = stage, C = stage.ctx;
+await loadFonts(); await document.fonts.load('500 40px Oswald');   // signs are drawn at load: fonts first
+scene.fog = new THREE.Fog('#0a0e18', 40, 140);
+
+// ---------- word times ----------
+const nrm = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9:]/g, '').replace(/:$/, '');
+const LN = i => TIMING.lines[i];
+function w(li, word, n = 0) {
+  const ws = LN(li).words.filter(x => nrm(x.w) === nrm(word));
+  if (!ws.length) throw new Error(`"${word}" não está na fala ${li}: ${LN(li).text}`);
+  return ws[Math.min(n, ws.length - 1)].s;
+}
+const S = i => LN(i).start, E = i => LN(i).end, VEND = TIMING.voice_end;
+const tApaga = w(0, 'apaga');
+
+// ---------- 2D helpers ----------
+function T(c, s, x, y, px, color, o = {}) {
+  c.font = `${o.w || 700} ${px}px ${o.mono ? '"JetBrains Mono"' : 'Oswald'}`; c.textAlign = o.align || 'center'; c.textBaseline = 'middle';
+  if (o.maxW) { const m = c.measureText(s).width; if (m > o.maxW) c.font = `${o.w || 700} ${Math.floor(px * o.maxW / m)}px ${o.mono ? '"JetBrains Mono"' : 'Oswald'}`; }
+  if (o.stroke) { c.lineJoin = 'round'; c.lineWidth = o.stroke; c.strokeStyle = '#0b0c0f'; c.strokeText(s, x, y); }
+  c.fillStyle = color; c.fillText(s, x, y);
+}
+function canvasTex(w, h, draw) {
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h; draw(cv.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+// a flat 2D prop on a camera-facing plane (same model in every shot)
+function flatProp(wm, hm, px, draw, o = {}) {
+  const tex = canvasTex(px, Math.round(px * hm / wm), draw);
+  const g = new THREE.PlaneGeometry(wm, hm); g.translate(0, hm / 2, 0);
+  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide, emissive: '#ffffff', emissiveMap: tex, emissiveIntensity: o.glow ?? 0.25, roughness: 1 }));
+  m.castShadow = true; m.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: tex, alphaTest: 0.5 });
+  if (o.billboard !== false) m.userData.billboard = cam => { const p = new THREE.Vector3(); cam.getWorldPosition(p); const q = new THREE.Vector3(); m.getWorldPosition(q); m.rotation.y = Math.atan2(p.x - q.x, p.z - q.z); };
+  return m;
+}
+function sign(wm, hm, px, draw, glow = 1) {
+  const tex = canvasTex(px, Math.round(px * hm / wm), draw);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(wm, hm), new THREE.MeshStandardMaterial({ map: tex, emissive: '#ffffff', emissiveMap: tex, emissiveIntensity: glow, roughness: 0.6 }));
+  return m;
+}
+const knockShake = (t, t0, n = 3, gap = 0.33) => { let s = 0; for (let k = 0; k < n; k++) { const d = t - (t0 + k * gap); if (d >= 0) s += Math.exp(-d * 18) * Math.sin(d * 90); } return s; };
+
+// ---------- cast ----------
+const hero = new Stickman({ mark: { type: 'band', color: '#e0342b' } });
+const jorge = new Stickman({ mark: { type: 'cap', color: '#e2a72e' }, height: 1.72 });
+const moca = new Stickman({ mark: { type: 'scarf', color: '#3d8bff' }, height: 1.66 });
+const vo = new Stickman({ mark: { type: 'shawl', color: '#8e5a9e' }, height: 1.52, body: '#ece6da' });
+const sombra1 = new Stickman({ body: '#2b2f38', outline: '#07080a', eyes: false, glow: 0.05, height: 1.8 });
+const sombra2 = new Stickman({ body: '#2b2f38', outline: '#07080a', eyes: false, glow: 0.05, height: 1.74 });
+
+// ---------- the city (always in the scene, behind the apartment window) ----------
+const city = new THREE.Group(); scene.add(city);
+city.add(box(260, 0.1, 200, '#11141b', 0, -15.1, -80));
+const R = rng(31), WINS = [], LIT = new THREE.MeshBasicMaterial({ color: '#ffcf8a' }), DARK = mat('#0d1016');
+for (let i = 0; i < 26; i++) {
+  const z = -14 - R() * 60, x = (R() - 0.5) * 90 + (i % 2 ? 6 : -6), floors = 5 + Math.floor(R() * 14);
+  const tw = tower({ floors, cols: 4 + Math.floor(R() * 3), w: 6 + R() * 5, d: 6, floorH: 2.8, color: ['#3a3f4b', '#4a4640', '#363b47'][i % 3], seed: 100 + i, litShare: 0.55 });
+  tw.position.set(x, -15, z); tw.rotation.y = (R() - 0.5) * 0.5; city.add(tw);
+  for (const wi of tw.userData.windows) { wi.mesh.material = LIT; WINS.push({ mesh: wi.mesh, on: wi.on, off: tApaga - 4.2 + (74 + z) / 13.5 + R() * 0.5 }); }
+}
+function cityLights(t) { for (const wi of WINS) wi.mesh.material = wi.on && t < wi.off ? LIT : DARK; }
+coldFill(scene, '#6a86c0', 0.75);
+
+// ---------- set: apartamento 32 (origin) ----------
+const apto = room({ w: 5, d: 5, h: 2.6, wall: '#857a6c', floor: '#5b4a3b', ceiling: '#5e5a54',
+  holes: [{ x: -1.1, y: 0.95, w: 1.3, h: 1.15 }, { x: 1.3, y: 0, w: 0.9, h: 2.08 }] });
+stage.sets.apto = apto; scene.add(apto);
+const portaApto = door({ color: '#6b4a32' }); portaApto.position.set(1.3, 0.035, -2.47); apto.add(portaApto);
+apto.add(box(1.6, 0.42, 0.75, '#3f5a6e', -0.7, 0, 0.9), box(1.6, 0.4, 0.18, '#3f5a6e', -0.7, 0.42, 1.2));     // sofá
+apto.add(box(0.7, 0.5, 0.5, '#6a4a30', 0.6, 0, 0.6));                                                           // mesinha
+apto.add(box(0.06, 0.12, 0.06, '#f2ead8', 0.6, 0.5, 0.6));                                                       // vela
+apto.add(box(0.9, 0.06, 0.35, '#5a4636', -1.1, 0.9, -2.3));                                                      // peitoril
+const hall = new THREE.Group(); apto.add(hall);                                                                  // corredor atrás da porta
+hall.add(box(1.6, 0.05, 1.6, '#3d3a36', 1.3, -0.05, -3.35), box(0.1, 2.6, 1.6, '#4a4741', 0.5, 0, -3.35), box(0.1, 2.6, 1.6, '#4a4741', 2.1, 0, -3.35), box(1.6, 2.6, 0.1, '#4a4741', 1.3, 0, -4.15));
+const lampada = practical('#ffb46b', 7, 9); lampada.position.set(0, 2.35, 0); apto.add(lampada);
+const vela = practical('#ff9a45', 0, 5); vela.position.set(0.6, 0.72, 0.6); apto.add(vela);
+const fresta = accent('#ffe9c4', 0, 0.9); fresta.position.set(1.3, 1.4, -3.7); fresta.target.position.set(1.3, 0, -1.6); apto.add(fresta, fresta.target);
+const telaLuz = new THREE.PointLight('#cfe1ff', 0, 2.5, 1.6); apto.add(telaLuz);
+const gap = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.035), new THREE.MeshBasicMaterial({ color: '#ffe9c4' })); gap.position.set(1.3, 0.018, -2.43); apto.add(gap);                                  // a luz do celular
+apto.add(hero.mesh);
+
+// ---------- set: pronto-socorro (x = 100) ----------
+const ps = new THREE.Group(); ps.position.x = 100; stage.sets.ps = ps; scene.add(ps);
+ps.add(box(20, 0.1, 14, '#2a2b2e', 0, -0.1, 2));
+const fachada = wallWithHoles(9, 5, [{ x: 0, y: 0, w: 2.2, h: 2.4 }], '#b8b2a6', 0.3); fachada.position.z = -2; ps.add(fachada);
+ps.add(box(9, 0.3, 4, '#9a948a', 0, 5, -4));
+const dentroPs = box(8.6, 4.8, 0.1, '#1d2830', 0, 0, -4.2); ps.add(dentroPs);
+for (const x of [-0.55, 0.55]) ps.add(box(1.0, 2.35, 0.04, '#6d8a99', x, 0, -2.02, { rough: 0.2, metal: 0.3 }));
+for (let k = 0; k < 7; k++) { const l = box(0.14, 0.05, 0.05, '#8c8f94', -0.5 + k * 0.16, 1.05 + Math.sin(k * 0.9) * 0.08, -1.82, { metal: 0.8, rough: 0.3 }); l.rotation.z = (k % 2 ? 0.5 : -0.5); ps.add(l); }
+ps.add(box(0.3, 0.3, 0.15, '#4a4a4a', 0.55, 1.0, -1.82, { metal: 0.7 }));                                        // cadeado
+const placaPs = sign(3.4, 0.65, 1024, (c, W, H) => { c.fillStyle = '#f2efe8'; c.fillRect(0, 0, W, H); c.fillStyle = '#d7261e'; c.fillRect(30, 30, 140, 140); c.fillStyle = '#fff'; c.fillRect(85, 50, 30, 100); c.fillRect(50, 85, 100, 30);
+  c.fillStyle = '#d7261e'; c.font = '700 112px Oswald'; c.textBaseline = 'middle'; c.fillText('PRONTO-SOCORRO', 190, 100, 810); }, 0.6);
+placaPs.position.set(0, 3.1, -1.83); ps.add(placaPs);
+const psPoste = practical('#ffb46b', 5, 12); psPoste.position.set(-3.5, 4.2, 1); ps.add(psPoste);
+ps.add(box(0.12, 4.2, 0.12, '#3a3a3a', -3.5, 0, 1));
+const psSirene = accent('#ff3b30', 22, 0.6); psSirene.position.set(3, 3.5, 3); psSirene.target.position.set(0, 1, -2); ps.add(psSirene, psSirene.target);
+
+// ---------- set: monitor do hospital (x = 200) ----------
+const mon = room({ w: 4, d: 4, h: 2.6, wall: '#7e8a8f', floor: '#4b5257', ceiling: '#5d6468' }); mon.position.x = 200; stage.sets.mon = mon; scene.add(mon);
+mon.add(box(2.2, 0.9, 0.8, '#d9d4c8', 0, 0, -0.4));
+mon.add(box(0.75, 0.48, 0.05, '#15171c', 0, 1.02, -0.55), box(0.08, 0.14, 0.08, '#15171c', 0, 0.9, -0.55));
+const telaRansom = sign(0.7, 0.43, 1024, (c, W, H) => {
+  c.fillStyle = '#9c0d0d'; c.fillRect(0, 0, W, H); c.fillStyle = '#ffdddd'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.font = '700 74px Oswald'; c.fillText('SEUS ARQUIVOS', W / 2, 150); c.fillText('FORAM BLOQUEADOS', W / 2, 240);
+  c.font = '700 44px "JetBrains Mono"'; c.fillText('PAGUE PARA RECUPERAR', W / 2, 360); c.fillStyle = '#ff6a6a'; c.fillRect(260, 430, 504, 70); c.fillStyle = '#5a0606'; c.fillText('71:59:58', W / 2, 466);
+  c.strokeStyle = '#ffdddd'; c.lineWidth = 10; c.beginPath(); c.arc(W / 2, 560, 0, 0, 7); c.stroke(); }, 1.3);
+telaRansom.position.set(0, 1.26, -0.52); mon.add(telaRansom);
+mon.add(box(0.5, 0.03, 0.18, '#2b2d33', 0, 0.9, -0.15));
+const monLuz = new THREE.PointLight('#ff3a2a', 4, 4, 1.5); monLuz.position.set(0, 1.3, 0.1); mon.add(monLuz);
+const monLamp = practical('#ffc27d', 3, 6); monLamp.position.set(-1.4, 2.3, 0.6); mon.add(monLamp);
+
+// ---------- set: quarto da vó (x = 300) ----------
+const quarto = room({ w: 3.6, d: 3.6, h: 2.5, wall: '#7c6f84', floor: '#5a4636', ceiling: '#5a5560', holes: [{ x: 0.9, y: 1.0, w: 0.9, h: 0.9 }] });
+quarto.position.x = 300; stage.sets.quarto = quarto; scene.add(quarto);
+quarto.add(box(2.0, 0.42, 1.1, '#e8e1d0', 0.3, 0, -0.9), box(2.0, 0.12, 1.1, '#8a6a9a', 0.3, 0.42, -0.9), box(0.12, 0.85, 1.1, '#5a3e2c', -0.73, 0, -0.9));
+quarto.add(box(0.5, 0.55, 0.45, '#5a3e2c', -1.25, 0, -1.2));
+quarto.add(box(0.06, 0.1, 0.06, '#f2ead8', -1.38, 0.55, -1.2));
+const voDeitada = flatProp(1.7, 0.62, 1024, (c, W, H) => {
+  const k = W / 1.7; c.lineCap = 'round'; c.lineJoin = 'round';
+  c.fillStyle = '#f4f0e6'; c.strokeStyle = '#15171c'; c.lineWidth = 14; c.beginPath(); c.roundRect(40, 210, 280, 120, 50); c.fill(); c.stroke();   // travesseiro
+  c.beginPath(); c.arc(190, 200, 72, 0, 7); c.fillStyle = '#15171c'; c.fill(); c.beginPath(); c.arc(190, 200, 60, 0, 7); c.fillStyle = '#ece6da'; c.fill();
+  c.fillStyle = '#c9c6c0'; c.beginPath(); c.arc(150, 152, 34, 0, 7); c.fill();                                               // coque
+  c.strokeStyle = '#15171c'; c.lineWidth = 9; c.beginPath(); c.moveTo(200, 196); c.lineTo(226, 196); c.moveTo(238, 196); c.lineTo(262, 196); c.stroke(); // olhos fechados
+  c.fillStyle = '#8e5a9e'; c.strokeStyle = '#15171c'; c.lineWidth = 18; c.beginPath(); c.roundRect(250, 220, 740, 150, 60); c.fill(); c.stroke(); // cobertor
+  c.strokeStyle = '#6f4580'; c.lineWidth = 8; for (let x = 330; x < 960; x += 90) { c.beginPath(); c.moveTo(x, 240); c.lineTo(x - 30, 350); c.stroke(); }
+}, { glow: 0.22 });
+voDeitada.position.set(0.35, 0.5, -0.8); quarto.add(voDeitada);
+const caneta = flatProp(0.34, 0.09, 1024, (c, W, H) => {
+  c.lineJoin = 'round'; c.fillStyle = '#e9edf2'; c.strokeStyle = '#15171c'; c.lineWidth = 16; c.beginPath(); c.roundRect(20, 60, 860, 150, 60); c.fill(); c.stroke();
+  c.fillStyle = '#ff8a1f'; c.fillRect(30, 70, 120, 130); c.beginPath(); c.roundRect(880, 95, 120, 80, 20); c.fill(); c.stroke();
+  c.fillStyle = '#1b3d7a'; c.font = '700 70px Oswald'; c.textBaseline = 'middle'; c.fillText('INSULINA', 190, 136);
+  c.fillStyle = '#cfe0ef'; c.strokeStyle = '#15171c'; c.lineWidth = 8; c.beginPath(); c.roundRect(540, 92, 280, 86, 20); c.fill(); c.stroke();
+  c.fillStyle = '#d7261e'; c.font = '700 64px "JetBrains Mono"'; c.fillText('0 UI', 590, 138);
+}, { glow: 0.35 });
+caneta.position.set(-1.18, 0.56, -1.05); quarto.add(caneta);
+const quartoVela = practical('#ff9a45', 3.2, 5); quartoVela.position.set(-1.38, 0.75, -1.2); quarto.add(quartoVela);
+const lua = accent('#8fb0ff', 9, 0.45); lua.position.set(0.9, 2.2, -3.6); lua.target.position.set(0.4, 0.4, -0.6); quarto.add(lua, lua.target);
+quarto.add(vo.mesh);
+
+// ---------- set: farmácia (x = 400) ----------
+const farm = new THREE.Group(); farm.position.x = 400; stage.sets.farm = farm; scene.add(farm);
+farm.add(box(16, 0.1, 12, '#2a2b2e', 0, -0.1, 2), box(16, 0.15, 2, '#5d5a55', 0, 0, 0.2));
+const farmFach = wallWithHoles(7, 4, [{ x: 0, y: 0, w: 3.2, h: 2.6 }], '#d8d3c4', 0.25); farmFach.position.z = -1.5; farm.add(farmFach);
+farm.add(box(3.1, 2.5, 0.1, '#14181c', 0, 0, -2.4));
+const portaAco = new THREE.Group(); farm.add(portaAco);
+for (let k = 0; k < 13; k++) portaAco.add(box(3.2, 0.12, 0.06, k % 2 ? '#8e9296' : '#9ea2a6', 0, 0.85 + k * 0.135, -1.45, { metal: 0.6, rough: 0.5 }));
+const avisoFarm = flatProp(0.8, 0.55, 512, (c, W, H) => { c.fillStyle = '#f7f3e6'; c.fillRect(0, 0, W, H); c.strokeStyle = '#15171c'; c.lineWidth = 10; c.strokeRect(5, 5, W - 10, H - 10);
+  c.fillStyle = '#d7261e'; c.textAlign = 'center'; c.font = '700 64px Oswald'; c.textBaseline = 'middle'; c.fillText('SISTEMA', W / 2, 110); c.fillText('FORA DO AR', W / 2, 190);
+  c.fillStyle = '#15171c'; c.font = '500 38px Oswald'; c.fillText('NÃO VENDEMOS SEM SISTEMA', W / 2, 280); }, { glow: 0.3, billboard: false });
+avisoFarm.position.set(0.3, 1.45, -1.4); farm.add(avisoFarm);
+const cruz = sign(1.1, 1.1, 256, (c, W, H) => { c.fillStyle = '#0f2a17'; c.fillRect(0, 0, W, H); c.fillStyle = '#2fdc6a'; c.fillRect(90, 20, 76, 216); c.fillRect(20, 90, 216, 76); }, 0.9);
+cruz.position.set(2.6, 3.2, -1.36); farm.add(cruz);
+const placaFarm = sign(3.6, 0.6, 1024, (c, W, H) => { c.fillStyle = '#1b6b3a'; c.fillRect(0, 0, W, H); c.fillStyle = '#fff'; c.font = '700 120px Oswald'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('FARMÁCIA', W / 2, H / 2 + 6); }, 0.35);
+placaFarm.position.set(-0.4, 3.2, -1.36); farm.add(placaFarm);
+const farmPoste = practical('#ffb46b', 6, 12); farmPoste.position.set(-3, 4, 1.5); farm.add(farmPoste, box(0.12, 4, 0.12, '#3a3a3a', -3, 0, 1.5));
+const farmVerde = accent('#2fdc6a', 6, 0.7); farmVerde.position.set(2.6, 3.2, 0.5); farmVerde.target.position.set(1, 0, 0.5); farm.add(farmVerde, farmVerde.target);
+
+// ---------- set: corredor e escada do Bloco C (x = 500) ----------
+const corr = new THREE.Group(); corr.position.x = 500; stage.sets.corr = corr; scene.add(corr);
+corr.add(box(3.4, 0.05, 2.6, '#47433d', -0.4, -0.05, -0.9));
+const paredeFundo = wallWithHoles(6, 2.7, [{ x: -0.6, y: 0, w: 0.9, h: 2.05 }], '#7b7568'); paredeFundo.position.z = -2.2; corr.add(paredeFundo);
+const porta34 = door({ color: '#5a3b2a' }); porta34.position.set(-0.6, 0, -2.15); corr.add(porta34);
+const n34 = sign(0.3, 0.18, 256, (c, W, H) => { c.fillStyle = '#c9a35a'; c.fillRect(0, 0, W, H); c.fillStyle = '#15171c'; c.font = '700 110px Oswald'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('34', W / 2, H / 2 + 4); }, 0.3);
+n34.position.set(-0.6, 2.2, -2.13); corr.add(n34);
+corr.add(box(0.12, 2.7, 2.6, '#7b7568', -2.1, 0, -0.9), box(0.12, 2.7, 2.6, '#7b7568', 4.6, 0, -0.9));
+for (let i = 0; i < 12; i++) corr.add(box(0.3, 0.17, 1.3, '#5d5850', 1.45 + i * 0.3, -(i + 1) * 0.17, -0.9));
+corr.add(box(3.6, 0.12, 0.08, '#2f2d2a', 3.1, 0.9, -0.24, { metal: 0.6 }));                                       // corrimão
+corr.add(box(0.12, 2.7, 1.3, '#7b7568', 4.95, -2.04, -0.9));                                                       // parede do patamar
+const corrLuz = practical('#ffcf9a', 0, 6); corrLuz.position.set(0.4, 2.45, -0.9); corr.add(corrLuz);
+const lanterna = accent('#fff1d6', 0, 0.42); corr.add(lanterna, lanterna.target);
+const bulboLant = new THREE.Mesh(new THREE.SphereGeometry(0.04, 10, 8), new THREE.MeshBasicMaterial({ color: '#fff6e0' })); corr.add(bulboLant);
+const caixa = new THREE.Group(); corr.add(caixa);
+caixa.add(box(0.42, 0.32, 0.28, '#f1f4f7', 0, 0, 0), box(0.44, 0.06, 0.3, '#2c6fd6', 0, 0.32, 0));
+const cruzCaixa = sign(0.16, 0.16, 128, (c, W, H) => { c.fillStyle = '#f1f4f7'; c.fillRect(0, 0, W, H); c.fillStyle = '#2c6fd6'; c.fillRect(48, 10, 32, 108); c.fillRect(10, 48, 108, 32); }, 1.2);
+cruzCaixa.position.set(0, 0.17, 0.145); caixa.add(cruzCaixa);
+const azulCorr = accent('#4a8bff', 0, 0.8); azulCorr.position.set(3.8, 1.4, 1.2); azulCorr.target.position.set(0, 0.8, -1.2); corr.add(azulCorr, azulCorr.target);
+corr.add(jorge.mesh, moca.mesh, sombra1.mesh, sombra2.mesh);
+
+// ---------- set: pátio visto da janela (x = 600) ----------
+const patio = new THREE.Group(); patio.position.x = 600; stage.sets.patio = patio; scene.add(patio);
+patio.add(box(40, 0.1, 40, '#2c2e30', 0, -0.1, -4));
+for (const [x, z, r] of [[-11, -6, 0.2], [11, -7, -0.25], [0, -20, 0]]) { const b = tower({ floors: 5, cols: 5, w: 10, d: 7, floorH: 2.8, color: '#57524a', seed: 9 + x, litShare: 0 }); b.position.set(x, 0, z); b.rotation.y = r; patio.add(b); }
+const carro = new THREE.Group(); patio.add(carro); carro.position.set(0.5, 0, -3);
+carro.add(box(1.9, 0.75, 4.2, '#e9e9ea', 0, 0.25, 0), box(1.7, 0.6, 2.2, '#dcdcde', 0, 1.0, -0.3), box(1.2, 0.12, 0.3, '#15171c', 0, 1.6, -0.3));
+const barraAzul = box(0.5, 0.12, 0.28, '#1f3d8a', -0.32, 1.6, -0.3, { emissive: '#3a7bff', glow: 0 }); carro.add(barraAzul);
+const barraVerm = box(0.5, 0.12, 0.28, '#7a1a16', 0.32, 1.6, -0.3, { emissive: '#ff3b30', glow: 0 }); carro.add(barraVerm);
+const sireneAzul = accent('#3a7bff', 0, 1.1); sireneAzul.position.set(0.5, 2.0, -3.3); sireneAzul.target.position.set(0.5, 0, 2); patio.add(sireneAzul, sireneAzul.target);
+const patioPoste = practical('#ffb46b', 16, 20); patioPoste.position.set(-6, 5, 2); patio.add(patioPoste, box(0.15, 5, 0.15, '#3a3a3a', -6, 0, 2));
+const portaria = box(2.5, 2.6, 2, '#6a655c', 6, 0, 2); patio.add(portaria);
+
+// ---------- phone screens (2D) ----------
+const FUNDO = '#0f1218';
+function telaPix(c, x, y, w, h, k) {
+  c.fillStyle = FUNDO; c.fillRect(x, y, w, h);
+  T(c, k ? 'MAQUININHA' : 'PIX', x + w / 2, y + 90, 46, '#9fb3c8', { w: 500 });
+  c.fillStyle = '#d7261e'; c.beginPath(); c.arc(x + w / 2, y + 360, 120, 0, 7); c.fill(); T(c, '!', x + w / 2, y + 362, 180, '#fff');
+  T(c, k ? 'TRANSAÇÃO' : 'SISTEMA', x + w / 2, y + 600, 72, '#fff'); T(c, k ? 'NEGADA' : 'INDISPONÍVEL', x + w / 2, y + 690, 72, '#ff5a4f', { maxW: w - 60 });
+  T(c, k ? 'R$ 42,90' : 'Tente mais tarde', x + w / 2, y + 820, k ? 60 : 40, '#9fb3c8', { w: 500, mono: !!k });
+}
+function telaAlerta(c, x, y, w, h, hora, novo, kk = 1) {
+  c.fillStyle = '#141820'; c.fillRect(x, y, w, h);
+  T(c, hora, x + w / 2, y + 190, 130, '#e8edf5', { w: 500 }); T(c, 'sem sinal de energia', x + w / 2, y + 290, 32, '#7d8796', { w: 500 });
+  const by = y + 400 + (1 - clamp(kk)) * -200;
+  c.globalAlpha *= clamp(kk * 1.5); c.fillStyle = novo ? '#123a2a' : '#3a1212'; c.beginPath(); c.roundRect(x + 24, by, w - 48, novo ? 300 : 280, 30); c.fill();
+  c.fillStyle = novo ? '#2fdc6a' : '#ff3b30'; c.beginPath(); c.roundRect(x + 24, by, w - 48, 70, [30, 30, 0, 0]); c.fill();
+  T(c, novo ? 'ALERTA SP · NOVO' : 'ALERTA SP', x + 54, by + 36, 40, '#fff', { align: 'left' });
+  if (novo) { T(c, 'Resgate no Bloco C.', x + 54, by + 130, 46, '#fff', { align: 'left', w: 500 }); T(c, 'Temos insulina.', x + 54, by + 200, 46, '#7dffae', { align: 'left' }); T(c, 'Deixe o caminho livre.', x + 54, by + 260, 32, '#b9c3cf', { align: 'left', w: 500 }); }
+  else { T(c, 'Ataque cibernético em SP.', x + 54, by + 130, 40, '#fff', { align: 'left', w: 500 }); T(c, 'Siga as regras.', x + 54, by + 190, 46, '#ff8a80', { align: 'left' }); T(c, 'Toque para ler.', x + 54, by + 245, 32, '#b9c3cf', { align: 'left', w: 500 }); }
+  c.globalAlpha = 1;
+}
+function telaChat(c, x, y, w, h, typed, enviado, alarme = 0) {
+  c.fillStyle = '#10141b'; c.fillRect(x, y, w, h);
+  c.fillStyle = '#3a1212'; c.fillRect(x, y, w, 110); T(c, 'ALERTA SP', x + w / 2, y + 60, 44, '#ff8a80');
+  c.fillStyle = '#262c36'; c.beginPath(); c.roundRect(x + 30, y + 160, w - 120, 190, 28); c.fill();
+  T(c, 'Responda: quem', x + 60, y + 215, 42, '#fff', { align: 'left', w: 500 }); T(c, 'mora com você?', x + 60, y + 268, 42, '#fff', { align: 'left', w: 500 }); T(c, '00:31', x + 60, y + 322, 26, '#7d8796', { align: 'left', mono: true });
+  if (typed) {
+    const bw = w - 120; c.fillStyle = alarme ? `rgb(${lerp(31, 120, alarme)},${lerp(91, 20, alarme)},${lerp(60, 20, alarme)})` : '#1f5b3c'; c.beginPath(); c.roundRect(x + 90, y + 420, bw, 190, 28); c.fill();
+    const a = typed.slice(0, 13), b = typed.slice(13);
+    T(c, a, x + 120, y + 478, 44, '#fff', { align: 'left', w: 500 }); if (b) T(c, b.trim(), x + 120, y + 534, 44, '#fff', { align: 'left', w: 500 });
+    if (enviado) T(c, 'ENVIADO 00:32', x + w - 50, y + 584, 24, '#9be7bd', { align: 'right', mono: true });
+  }
+  c.fillStyle = '#1b2029'; c.fillRect(x, y + h - 140, w, 140); c.fillStyle = '#2a313c'; c.beginPath(); c.roundRect(x + 24, y + h - 110, w - 48, 80, 40); c.fill();
+  T(c, enviado ? 'Mensagem' : (typed || 'Mensagem'), x + 60, y + h - 70, 32, '#7d8796', { align: 'left', w: 500, maxW: w - 110 });
+}
+
+// ---------- poses ----------
+const P = {
+  idle: { facing: 0, armL: [0.25, -0.2], armR: [-0.25, 0.2] },
+  scared: { facing: 0, mood: 'scared', armL: [0.7, -1.6], armR: [-0.7, 1.6], lean: -0.04 },
+  phone: { facing: 0, armL: [0.5, -2.1], armR: [-0.5, 2.1], headTilt: 0.12 },
+  back: { facing: 0, armL: [0.3, -0.3], armR: [-0.3, 0.6] },
+  point: { facing: 1, armR: [-1.9, 0.2], armL: [0.6, -1.9], mood: 'scared' },
+  torch: { facing: 0, armL: [0.9, -1.5], armR: [-0.3, 0.3] },
+  carry: { facing: 0, armL: [0.25, -0.1], armR: [-0.9, 1.2] },
+  sit: { facing: 1, legL: [1.45, -1.45], legR: [1.35, -1.35], armL: [0.6, -1.2], armR: [-0.2, 0.9], lean: 0.05, mood: 'scared' },
+};
+function poseHero(p, eyes = true) { hero.o.eyes = eyes; hero.pose(p); }
+
+// ---------- shots: each sets the set, the figures and the camera; returns lens options + 2D overlay ----------
+const L0s = w(0, 'são', 1);
+const SHOTS = [
+  { at: 0, f(t, u) {      // abertura: por cima do ombro, a câmera abre e mostra a janela e a cidade apagando
+    stage.use('apto'); hero.mesh.position.set(-1.1, 0, -1.85); poseHero(P.back, false);
+    const k = ease(u / 2.6);
+    stage.aim([lerp(-0.86, -0.1, k), lerp(1.2, 1.35, k), lerp(-1.25, 0.95, k)], [-1.15, lerp(1.2, 0.95, k), -3.2], lerp(64, 68, k));
+  } },
+  { at: L0s - 0.05, f(t, u) {   // pela janela: São Paulo apaga em onda
+    stage.use('apto'); hero.mesh.position.set(-1.1, 0, -1.6); poseHero(P.back, false);
+    stage.aim([-1.1, 1.55, -2.62], [lerp(-2, 2, ease(u / 2.5)), -4, -45], 74); return { bloom: 0.8 };
+  } },
+  { at: S(1) - 0.05, f(t, u) {   // você vira para dentro, no escuro
+    stage.use('apto'); hero.mesh.position.set(-1.0, 0, -1.7); poseHero(u < 0.6 ? P.back : P.scared, u >= 0.6);
+    telaLuz.position.set(-0.75, 0.85, -1.3); telaLuz.intensity = 0.5; stage.aim([0.5, 1.25, lerp(0.9, 0.6, u / 2)], [-1.0, 0.9, -1.9], 64);
+  } },
+  { at: S(2) - 0.05, f(t, u) {   // POV celular: Pix fora / maquininha negada
+    stage.use('apto'); hero.mesh.position.set(-0.3, 0, -0.5); poseHero(P.phone);
+    stage.aim([-0.3, 1.5, 0.1], [-0.3, 0.2, -1.2], 66);
+    return { phone: (c, x, y, ww, h) => telaPix(c, x, y, ww, h, t >= w(2, 'cartão') - 0.05), capY: 400 };
+  } },
+  { at: S(3) - 0.05, f(t, u) {   // pronto-socorro trancado
+    stage.use('ps'); stage.aim([100 + lerp(1.4, 0.9, u / 2.6), 0.7, lerp(7.6, 6.6, u / 2.6)], [100, 1.9, -2], 62);
+    psSirene.intensity = 10 + 14 * (0.5 + 0.5 * Math.sin(t * 9)); placaPs.material.emissiveIntensity = (Math.sin(t * 23) > -0.6 ? 0.55 : 0.08);
+  } },
+  { at: S(4) - 0.05, f(t, u) {   // o vírus de 2017: tela de resgate
+    stage.use('mon'); stage.aim([200 + lerp(0.9, 0.6, u / 2), 1.45, lerp(1.9, 1.5, u / 2)], [200, 1.15, -0.5], 60);
+    return { over: c => yearCard(c, t) };
+  } },
+  { at: w(4, 'travou') - 0.05, f(t, u) {
+    stage.use('mon'); stage.aim([200.05, 1.28, lerp(0.42, 0.3, u / 2)], [200, 1.24, -0.52], 52);
+    return { over: c => yearCard(c, t) };
+  } },
+  { at: S(5) - 0.05, f(t, u) {   // a vó dorme
+    stage.use('quarto'); vo.mesh.visible = false; voDeitada.visible = true;
+    quartoVela.userData.light.intensity = 3 + 0.4 * Math.sin(t * 13); stage.aim([300 + lerp(1.5, 1.2, u / 1.8), 1.5, 1.2], [300.2, 0.55, -0.9], 62);
+  } },
+  { at: S(6) - 0.05, f(t, u) {   // macro: a caneta vazia
+    stage.use('quarto'); vo.mesh.visible = false; voDeitada.visible = true; quartoVela.userData.light.intensity = 3 + 0.4 * Math.sin(t * 13);
+    stage.aim([300 - 1.18 + lerp(0.08, 0, u / 2.8), 0.68, -0.62], [300 - 1.18, 0.6, -1.05], 44);
+  } },
+  { at: S(7) - 0.05, f(t, u) {   // farmácia de porta baixa
+    stage.use('farm'); cruz.material.emissiveIntensity = Math.sin(t * 17) > 0.3 ? 0.9 : 0.1;
+    stage.aim([400 + lerp(-1.6, -0.9, u / 2.7), 1.3, lerp(4.6, 3.6, u / 2.7)], [400.2, 1.6, -1.4], 62);
+  } },
+  { at: S(8) - 0.05, f(t, u) {   // 00:31, no escuro da sala
+    stage.use('apto'); hero.mesh.position.set(-0.2, 0, 0.35); poseHero(P.idle);
+    stage.aim([1.1, 1.1, 1.7], [-0.3, 0.75, 0.0], 62);
+  } },
+  { at: w(8, 'seu') - 0.05, f(t, u) {   // POV: o alerta chega
+    stage.use('apto'); hero.mesh.position.set(-0.3, 0, -0.5); poseHero(P.phone);
+    stage.aim([-0.3, 1.5, 0.1], [-0.3, 0.2, -1.2], 66);
+    return { phone: (c, x, y, ww, h) => telaAlerta(c, x, y, ww, h, '00:31', false, spring((t - w(8, 'vibra')) * 1.4)), capY: 400 };
+  } },
+  { at: S(9) - 0.05, rule: 1, f(t, u) {   // regra 1
+    stage.use('apto'); hero.mesh.position.set(-0.4, 0, -0.2); poseHero(P.idle);
+    stage.aim([lerp(1.7, 1.4, u / 1.7), 1.15, 1.7], [-0.4, 0.75, -0.6], 64);
+    return { over: c => ruleSticker(c, 1, ['FIQUE EM CASA'], spring((t - S(9)) * 1.3), 560) };
+  } },
+  { at: S(10) - 0.05, rule: 2, f(t, u) {   // regra 2: o celular ilumina seu rosto
+    stage.use('apto'); hero.mesh.position.set(-0.4, 0, -0.2); poseHero(P.phone);
+    telaLuz.position.set(-0.4, 0.7, 0.3); telaLuz.intensity = 0.3;
+    stage.aim([-0.05, 1.2, lerp(1.45, 1.2, u / 2.5)], [-0.4, 1.2, -0.2], 62);
+    return { over: c => ruleSticker(c, 2, ['RESPONDA QUEM', 'MORA COM VOCÊ'], spring((t - S(10)) * 1.3), 560) };
+  } },
+  { at: S(11) - 0.05, rule: 3, f(t, u) {   // regra 3: plano baixo na porta
+    stage.use('apto'); hero.mesh.position.set(-0.4, 0, -0.2); poseHero(P.phone);
+    stage.aim([0.95, 0.25, lerp(-0.9, -1.2, u / 2.5)], [1.3, 0.85, -2.5], 70);
+    return { over: c => ruleSticker(c, 3, ['NÃO ABRA A PORTA', 'PRA NINGUÉM'], spring((t - S(11)) * 1.3), 560) };
+  } },
+  { at: S(12) - 0.05, f(t, u) {   // POV: você digita
+    stage.use('apto'); hero.mesh.position.set(-0.3, 0, -0.5); poseHero(P.phone); stage.aim([-0.3, 1.5, 0.1], [-0.3, 0.2, -1.2], 66);
+    const msg = 'Eu e minha vó, diabética.', a = w(12, 'eu'), b = E(12) - 0.25, n = Math.round(clamp((t - a) / (b - a)) * msg.length);
+    return { phone: (c, x, y, ww, h) => telaChat(c, x, y, ww, h, msg.slice(0, n), t > b + 0.1), capY: 400 };
+  } },
+  { at: S(13) - 0.05, f(t, u) {   // 01:47: batem; luz debaixo da porta
+    stage.use('apto'); hero.mesh.position.set(-0.4, 0, -0.2); poseHero(P.idle);
+    fresta.color.set('#ffe9c4'); fresta.intensity = 16 + 6 * Math.sin(t * 5.3);
+    fresta.target.position.set(1.3 + 0.4 * Math.sin(t * 2.1), 0, -1.6);
+    portaApto.userData.leaf.position.z = 0.012 * knockShake(t, w(13, 'batem'));
+    stage.aim([0.95, 0.18, -1.05], [1.3, 0.55, -2.5], 72);
+  } },
+  { at: S(14) - 0.05, f(t, u) {   // você vira para a porta (a voz do Jorge)
+    stage.use('apto'); hero.mesh.position.set(0.3, 0, -0.6); poseHero({ ...P.scared, facing: 1 });
+    fresta.intensity = 16 + 6 * Math.sin(t * 5.3); portaApto.userData.leaf.position.z = 0.012 * knockShake(t, S(14) + 0.1, 4, 0.22);
+    telaLuz.position.set(0.1, 0.85, -0.3); telaLuz.intensity = 0.5;
+    stage.aim([lerp(-1.2, -1.0, u / 2.8), 1.3, 1.3], [0.8, 0.9, -1.9], 66);
+  } },
+  { at: S(15) - 0.05, f(t, u) {   // olho mágico: o Jorge e a lanterna
+    stage.use('corr'); corrJorge(t, 1.25, P.torch); stage.aim([500, 1.3, 0.25], [500, 1.0, -1.5], 92);
+    return { fisheye: 1 };
+  } },
+  { at: S(16) - 0.05, f(t, u) {   // olho mágico: ele aponta pra baixo
+    stage.use('corr'); corrJorge(t, lerp(1.0, 0.75, ease(u / 1)), P.point); stage.aim([500, 1.3, 0.25], [500, 1.05, -1.5], 92);
+    return { fisheye: 1 };
+  } },
+  { at: S(17) - 0.05, f(t, u) {   // seu rosto
+    stage.use('apto'); hero.mesh.position.set(0.3, 0, -0.6); poseHero(P.scared);
+    telaLuz.position.set(0.3, 0.6, -0.15); telaLuz.intensity = 0.18; fresta.intensity = 14;
+    stage.aim([0.3, 1.1, lerp(0.25, 0.1, u / 2.8)], [0.3, 1.02, -0.6], 58);
+  } },
+  { at: S(18) - 0.05, f(t, u) {   // POV: a resposta já enviada
+    stage.use('apto'); hero.mesh.position.set(-0.3, 0, -0.5); poseHero(P.phone); stage.aim([-0.3, 1.5, 0.1], [-0.3, 0.2, -1.2], 66);
+    return { phone: (c, x, y, ww, h) => telaChat(c, x, y, ww, h, 'Eu e minha vó, diabética.', true, clamp((t - w(18, 'respondeu')) * 2)), capY: 400 };
+  } },
+  { at: S(19) - 0.05, f(t, u) {   // a escada: o Jorge desce
+    stage.use('corr'); jorge.mesh.visible = true; moca.mesh.visible = sombra1.mesh.visible = sombra2.mesh.visible = false; caixa.visible = false;
+    const x = jorge.walk(u, { speed: 0.75, facing: 1 }), sx = 1.3 + x;
+    jorge.mesh.position.set(sx, -Math.max(0, (sx - 1.45) / 0.3) * 0.17, -0.9);
+    lanternaEm(true, [sx + 0.25, jorge.mesh.position.y + 1.1, -0.85], [sx + 2.5, -1.6, -0.9], 26);
+    corrLuz.userData.light.intensity = 1.2; azulCorr.intensity = 0;
+    stage.aim([500.3, 1.9, 0.6], [502.6, -0.4, -0.9], 64);
+  } },
+  { at: S(20) - 0.05, f(t, u) {   // a lanterna some
+    stage.use('corr'); const u2 = u + (S(20) - S(19)), x = jorge.walk(u2, { speed: 0.75, facing: 1 }), sx = 1.3 + x;
+    jorge.mesh.visible = sx < 4.6; moca.mesh.visible = sombra1.mesh.visible = sombra2.mesh.visible = false; caixa.visible = false;
+    jorge.mesh.position.set(sx, -Math.max(0, (sx - 1.45) / 0.3) * 0.17, -0.9);
+    const on = t < w(20, 'some') + 0.15;
+    lanternaEm(on, [sx + 0.25, jorge.mesh.position.y + 1.1, -0.85], [sx + 2.5, -1.6, -0.9], 26);
+    stage.aim([500.3, 1.9, lerp(0.6, 0.3, u / 2.4)], [502.9, -0.6, -0.9], 62);
+  } },
+  { at: S(21) - 0.05, f(t, u) {   // 03:20: sirene azul no pátio
+    stage.use('patio'); const blink = Math.sin(t * 11) > 0;
+    sireneAzul.intensity = blink ? 40 : 6; barraAzul.material.emissiveIntensity = blink ? 3 : 0.2; barraVerm.material.emissiveIntensity = blink ? 0.2 : 2;
+    stage.aim([600 + lerp(-2, -1.4, u / 2.6), 7, 7.5], [600.5, 0.6, -3], 60);
+  } },
+  { at: S(22) - 0.05, f(t, u) {   // POV: "temos insulina"
+    stage.use('apto'); hero.mesh.position.set(-0.3, 0, -0.5); poseHero(P.phone); stage.aim([-0.3, 1.5, 0.1], [-0.3, 0.2, -1.2], 66);
+    return { phone: (c, x, y, ww, h) => telaAlerta(c, x, y, ww, h, '03:21', true, spring((t - S(22)) * 1.4)), capY: 400 };
+  } },
+  { at: S(23) - 0.05, f(t, u) {   // 04:12: batem de novo, luz azul debaixo da porta
+    stage.use('apto'); hero.mesh.position.set(-0.4, 0, -0.2); poseHero(P.idle);
+    fresta.color.set('#6fa2ff'); fresta.intensity = 18 + 4 * Math.sin(t * 3);
+    fresta.target.position.set(1.3, 0, -1.6); portaApto.userData.leaf.position.z = 0.012 * knockShake(t, w(23, 'batem'));
+    stage.aim([0.95, 0.18, -1.05], [1.3, 0.55, -2.5], 72);
+  } },
+  { at: S(24) - 0.05, f(t, u) {   // olho mágico: a mulher com a caixa térmica
+    stage.use('corr'); corrMoca(t, lerp(1.3, 1.05, ease(u / 2.7)), false); stage.aim([500, 1.3, 0.25], [500, 1.0, -1.5], 92);
+    return { fisheye: 1 };
+  } },
+  { at: S(25) - 0.05, f(t, u) {   // seu rosto
+    stage.use('apto'); hero.mesh.position.set(0.3, 0, -0.6); poseHero(P.scared);
+    fresta.color.set('#6fa2ff'); fresta.intensity = 16; telaLuz.position.set(0.3, 0.6, -0.15); telaLuz.intensity = 0.18;
+    stage.aim([0.3, 1.1, lerp(0.2, 0.06, u / 2.2)], [0.3, 1.02, -0.6], 56);
+  } },
+  { at: S(26) - 0.05, f(t, u) {   // a vó acorda tremendo
+    stage.use('quarto'); voDeitada.visible = false; vo.mesh.visible = true;
+    vo.pose({ facing: 0, mood: 'scared', lean: 0.03 * Math.sin(t * 37), legL: [0.45, -0.6], legR: [-0.45, 0.6], armL: [0.9 + 0.08 * Math.sin(t * 31), -2.1], armR: [-0.9, 2.1 + 0.08 * Math.sin(t * 27)] });
+    vo.mesh.position.set(0.4 + 0.012 * Math.sin(t * 43), -0.1, -0.22);
+    quartoVela.userData.light.intensity = 3 + 0.4 * Math.sin(t * 13);
+    stage.aim([300 + lerp(0.1, 0.25, u / 2.5), 0.95, lerp(1.25, 1.05, u / 2.5)], [300.4, 0.7, -0.3], 60);
+  } },
+  { at: S(27) - 0.05, f(t, u) {   // olho mágico: ela e as sombras que sobem
+    stage.use('corr'); corrMoca(t, lerp(0.95, 0.82, ease(u / 2)), true, u); stage.aim([500, 1.3, 0.25], [500, 1.0, -1.5], 94);
+    return { fisheye: 1 };
+  } },
+];
+function yearCard(c, t) {         // o contador do fato: "2017" aparece no momento em que é dito, e fica
+  const k = spring((t - w(4, '2017') + 0.12) * 1.6); if (k <= 0) return;
+  c.save(); c.translate(540, 1580); c.scale(0.7 + 0.3 * clamp(k, 0, 1.1), 0.7 + 0.3 * clamp(k, 0, 1.1)); c.rotate(-0.04);
+  c.fillStyle = '#ffcc4d'; c.beginPath(); c.roundRect(-250, -110, 500, 220, 26); c.fill();
+  T(c, '2017', 0, -10, 150, '#14161b'); T(c, 'REINO UNIDO', 0, 78, 40, '#14161b'); c.restore();
+}
+function lanternaEm(on, from, to, k = 22) {
+  lanterna.intensity = on ? k : 0; bulboLant.visible = on;
+  lanterna.position.set(...from); lanterna.target.position.set(...to); bulboLant.position.set(...from);
+}
+function corrJorge(t, z, pose) {
+  jorge.mesh.visible = true; moca.mesh.visible = sombra1.mesh.visible = sombra2.mesh.visible = false; caixa.visible = false;
+  jorge.mesh.position.set(0.05 * Math.sin(t * 2), 0, -z - 0.4); jorge.pose(pose);
+  corrLuz.userData.light.intensity = 1.6; azulCorr.intensity = 0;
+  lanternaEm(true, [0.32, 0.95, -z - 0.25], [0, 1.1, 0.4], 7);
+}
+function corrMoca(t, z, sombras, u = 0) {
+  jorge.mesh.visible = false; moca.mesh.visible = true; caixa.visible = true;
+  moca.mesh.position.set(-0.05, 0, -z - 0.4); moca.pose(P.carry);
+  caixa.position.set(0.27, 0.62, -z - 0.32);
+  lanternaEm(false, [0, 0, 0], [0, 0, 1]);
+  corrLuz.userData.light.intensity = 1.4; azulCorr.intensity = 12 + 4 * Math.sin(t * 6);
+  sombra1.mesh.visible = sombra2.mesh.visible = sombras; porta34.userData.open(0);
+  if (sombras) {
+    const k = ease(u / 2.2);
+    sombra1.mesh.position.set(lerp(1.15, 0.62, k), 0, -1.9); sombra1.walk(u * 0.6, { speed: 0.6, facing: -1 });
+    sombra2.mesh.position.set(lerp(-0.6, -0.8, k), 0, lerp(-2.4, -1.9, k)); sombra2.walk(u * 0.6 + 0.3, { speed: 0.5, facing: 1 });   // sai pela porta do 34
+    porta34.userData.open(lerp(0.2, 1.1, k));
+  }
+}
+
+// ---------- the HUD clock moves forward with the story ----------
+const CLOCK = [[0, '23:58'], [S(2), '23:59'], [S(5), '00:06'], [S(7), '00:14'], [S(8) - 0.05, '00:31'], [S(12), '00:32'], [S(13) - 0.05, '01:47'], [S(17), '01:49'],
+  [S(19), '01:52'], [S(20), '02:10'], [S(21) - 0.05, '03:20'], [S(22), '03:21'], [S(23) - 0.05, '04:12'], [S(25), '04:13']];
+const clockAt = t => { let s = CLOCK[0][1]; for (const [a, v] of CLOCK) if (t >= a) s = v; return s; };
+
+const CHUNKS = chunkCaptions(TIMING); window.CHUNKS = CHUNKS;
+console.log(CHUNKS.map(c => c.words.map(x => x.w).join(' ')).join(' | '));
+window.TOTAL = VEND + 3.5;
+
+function resetLights() {
+  lampada.userData.light.intensity = 0; lampada.userData.bulb.visible = false; vela.userData.light.intensity = 0;
+  fresta.intensity = 0; telaLuz.intensity = 0; portaApto.userData.leaf.position.z = 0;
+  sireneAzul.intensity = 0; lanterna.intensity = 0; bulboLant.visible = false; gap.visible = false;
+}
+function aptoLights(t) {
+  const on = t < tApaga + 0.05; lampada.userData.light.intensity = on ? 7 : 0; lampada.userData.bulb.visible = on;
+  if (t > S(5)) vela.userData.light.intensity = 2.6 + 0.35 * Math.sin(t * 13) + 0.2 * Math.sin(t * 29);
+  const night = clamp((t - tApaga) / 1.2);
+  scene.background = new THREE.Color().lerpColors(new THREE.Color('#26203a'), new THREE.Color('#080b14'), night);
+}
+
+window.seek = t => {
+  if (COVER) return cover();
+  resetLights(); aptoLights(t); cityLights(t);
+  let i = 0; for (let k = 0; k < SHOTS.length; k++) if (t >= SHOTS[k].at) i = k;
+  const tShot = Math.min(t, VEND - 0.001), sh = SHOTS[(t >= VEND) ? SHOTS.length - 1 : i];
+  const o = sh.f(tShot, tShot - sh.at) || {};
+  gap.visible = fresta.intensity > 0; gap.material.color.copy(fresta.color);
+  stage.draw(t, { fisheye: o.fisheye || 0, bloomStrength: o.bloom ?? 0.55, vignette: o.fisheye ? 0.25 : 0.45 });
+  if (o.phone) phone(C, o.phone);
+  if (o.over) o.over(C);
+  hud(C, 1, clockAt(t));
+  if (t >= VEND) { endCard(C, VEND, t, ['VOCÊ ABRE', 'A PORTA?'], 'ABRO: É A INSULINA', 'NÃO: É ARMADILHA', 2); return; }
+  drawCaptions(C, CHUNKS, Math.max(t, CHUNKS[0].s), o.capY || 1310);
+};
+
+function cover() {           // a capa: o olho mágico com a mulher e as sombras, o selo e o título
+  resetLights(); cityLights(99); scene.background = new THREE.Color('#080b14');
+  stage.use('corr'); corrMoca(1, 0.9, true, 1.4); stage.aim([500, 1.3, 0.25], [500, 1.0, -1.5], 94);
+  stage.draw(1.0, { fisheye: 1, vignette: 0.25 });
+  C.fillStyle = '#d7261e'; C.beginPath(); C.roundRect(300, 170, 480, 96, 48); C.fill(); T(C, 'ALERTA SP', 540, 220, 64, '#fff');
+  T(C, 'NÃO ABRA', 540, 400, 170, '#fff', { stroke: 16 }); T(C, 'A PORTA', 540, 560, 170, '#ffcc4d', { stroke: 16 });
+}
+
+await loadFonts();
+window.READY = true;
+</script>
+</body></html>
