@@ -208,8 +208,14 @@ Build every set once at load as a `THREE.Group` in `stage.sets`, and switch betw
      - a pacing check.
    - Fix any PACING WARNING or STOP and encode again.
 8. **The cover.** Run `python engine/render.py "part1/film.html#cover" part1/cover`. In cover mode `seek` draws the strongest picture, a red pill with the story title, and a 2-line title of 2 to 4 words in the top third.
-9. **The post kit.** Write `part1/post.md` in Portuguese: the title, a caption (what happened, the rules, the fact, "comenta A ou B"), 5 hashtags and a pinned comment.
-10. **Clean up.** Delete `frames/`, `vo/` and `stills/`. Deliver `part1.mp4`, `cover.jpg` and `post.md`.
+9. **The post kit.** Write `part1/post.md` in Portuguese:
+   - the title (YouTube Shorts allows 100 characters) and the cover text;
+   - one description per platform: TikTok (short, a hook, then "comenta A ou B"), Instagram Reels (what happened, the rules, the rule's catch, the fact, "comenta A ou B", "siga pra ver o Dia 2") and YouTube Shorts (2 or 3 lines);
+   - 5 hashtags (on Shorts, swap one for #shorts);
+   - a pinned comment with a clue, and two ready replies for the first A and B comments;
+   - the rule's catch and the fact used, with its source.
+10. **Clean up and deliver.** Delete `frames/`, `vo/` and `stills/`. Deliver `part1.mp4` (audio as AAC 44.1 kHz stereo, which every phone plays), `cover.jpg` and `post.md`.
+    - **Always send the post kit with the video:** in the same message that delivers the video, paste the whole kit (title, the three descriptions, hashtags, pinned comment) as text ready to copy. Never send a video without it.
 
 **Part 2,** only when I ask, with the vote result:
 - Answer the vote in the first 8 s.
