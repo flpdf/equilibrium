@@ -1,0 +1,8 @@
+# big or regenerated files: models download once, frames/vo/stills are deleted after each episode
+engine/models/
+engine/sfx/
+__pycache__/
+*/frames/
+*/vo/
+*/stills/
+*/mix_raw.wav
