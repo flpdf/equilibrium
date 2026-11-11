@@ -8,7 +8,7 @@ description: Fluxo diário do perfil "Chefão dos Treinos" (academia, boneco 3D 
 Por dia: 3 vídeos (37 s, 1080×1920, narrados) e 3 carrosséis (5 imagens 1080×1920), todos do mesmo tema. Cada tarefa agendada diz qual etapa rodar; rode só a sua. Ninguém acompanha: não pergunte, decida pelas regras, registre e siga. Fale em português do Brasil.
 
 ## Caminhos
-- `DRIVE` = `G:\Meu Drive\Área de Trabalho\Mixamo-Academia` no PC do Felipe. O terminal do PC não enxerga G:. Traga arquivos com `device_stage_files`, grave com `device_commit_files`, liste com `device_list_dir`. O processamento roda no container.
+- `DRIVE` = `G:\Meu Drive\Área de Trabalho\videos-claude\Chefao` no PC do Felipe. O terminal do PC não enxerga G:. Traga arquivos com `device_stage_files`, grave com `device_commit_files`, liste com `device_list_dir`. O processamento roda no container.
 - `DRIVE\_processo\` = kit: `grade.json`, `catalogo.csv`, `historico.csv`, `exemplos\`, `template.html`, `carrossel.html`, `carrossel.js`, `stills.js`, `render.js`, `render_all.sh`, `audio_falas.py`, `mix_musica.py`, `musicas\`.
 - `DRIVE\_processo\pautas\AAAA-MM-DD\` = a pauta do dia (formato em `reference/formato-pauta.md`).
 - `DRIVE\Videos-Prontos\AAAA-MM-DD\` = saída.

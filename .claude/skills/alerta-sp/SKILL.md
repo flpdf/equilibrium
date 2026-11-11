@@ -10,7 +10,7 @@ O processo detalhado ainda mora no PC: `C:\AlertaSP\ROTINA.md` (o QUANDO e o QUE
 ## Onde fica
 - Projeto: `C:\AlertaSP`. `device_bash` enxerga em `$HOME/mnt/<pasta>`; `device_list_dir`, `device_stage_files` e `device_commit_files` usam o caminho do Windows.
 - O terminal do `device_bash` é um Linux separado: sem GPU, Chrome, Voice Studio ou internet do Windows. Nunca rode `voice.py`, `render.py`, `sound.py` ou `encode.py` nele. Quem roda é o Iniciador, pela fila.
-- Episódios prontos: `G:\Meu Drive\Área de Trabalho\Alerta-SP\Episodios\DiaN` (o Iniciador copia).
+- Episódios prontos: `G:\Meu Drive\Área de Trabalho\videos-claude\AlertaSP\Episodios\DiaN` (o Iniciador copia).
 
 ## A fila (como pedir uma etapa ao Windows)
 1. Iniciador vivo? `C:\AlertaSP\_fila\runner_vivo.json`, campo `now` com menos de 2 min sem pedido em andamento. Parado há mais de 5 min: avise o Felipe ("rode a tarefa 'AlertaSP Iniciador' no Agendador de Tarefas") e encerre o turno.

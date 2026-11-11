@@ -8,7 +8,7 @@ description: Fluxo diário do canal "Se Acontecesse" (vídeos "E se…?" em 3D l
 Um episódio por dia, estilo Simplysimulated: cenas 3D low-poly, relógio da simulação ("+1 HORA", "+3 DIAS"), número grande no topo, frase curta em itálico embaixo, trilha e efeitos. Sem narração. Publica no TikTok e no Instagram (@eseacontecessse) pelo vidIQ na etapa de publicação da manhã (skill `publicacao`). Ninguém acompanha: decida pelas regras, registre e siga. Fale em português do Brasil.
 
 ## Caminhos
-- `RAIZ` = `G:\Meu Drive\Área de Trabalho\E-Se-Fosse-Real` no PC do Felipe (`device_stage_files` para trazer, `device_commit_files` para gravar; o processamento roda no container).
+- `RAIZ` = `G:\Meu Drive\Área de Trabalho\videos-claude\SeAcontecesse` no PC do Felipe (`device_stage_files` para trazer, `device_commit_files` para gravar; o processamento roda no container).
 - `RAIZ\_kit\` = motor three.js: `sim.html`, `kit\*.js`, `hud.css`, `render_sim.js`, `still.js`, `serve.js`, `audio_mix.py`, `convert.html/js`, `package.json`.
 - `RAIZ\Base\` = `Personagens\*.glb` (20 Mixamo), `Animacoes\*.fbx` (32), `Sons\*.mp3` (Mixkit) + `CREDITOS.txt`.
 - `RAIZ\_processo\` = `temas.csv`, `historico.csv`, `pautas\AAAA-MM-DD\`.

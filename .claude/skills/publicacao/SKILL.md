@@ -15,9 +15,9 @@ Regras do Felipe, sempre:
 - Contas em `reference/contas.md`; confirme com `vidiq_social_account_list` (`canPublish false`: avise e ofereça reconectar).
 
 ## 1. Material de hoje (Google Drive para ids e links; PC para ler e processar)
-- Chefão: `G:\Meu Drive\Área de Trabalho\Mixamo-Academia\Videos-Prontos\<hoje>\`: `HHMM_video_<x>.mp4` + `.txt`; `HHMM_carrossel_<slug>_1..5.jpg` + `.txt`. Sufixo `_sem-narracao`: avise.
-- Alerta SP: o `DiaN` mais recente ainda não agendado em `…\Alerta-SP\Episodios`: `partN.mp4`, `post.md` (Descrição TikTok / Instagram Reels), `fotos.md` (carrossel 1 = `foto_c1_*`, carrossel 2 = `foto_c2_*`, cada um com legenda, hashtags e horário sugerido; story = `foto_story.jpg`).
-- Se Acontecesse: o `NNN_slug` mais recente ainda não agendado em `…\E-Se-Fosse-Real\Episodios`: o `.mp4` final (não `_previa`; prefira `_ig.mp4` para o Instagram se existir) + `post.md`.
+- Chefão: `G:\Meu Drive\Área de Trabalho\videos-claude\Chefao\Videos-Prontos\<hoje>\`: `HHMM_video_<x>.mp4` + `.txt`; `HHMM_carrossel_<slug>_1..5.jpg` + `.txt`. Sufixo `_sem-narracao`: avise.
+- Alerta SP: o `DiaN` mais recente ainda não agendado em `G:\Meu Drive\Área de Trabalho\videos-claude\AlertaSP\Episodios`: `partN.mp4`, `post.md` (Descrição TikTok / Instagram Reels), `fotos.md` (carrossel 1 = `foto_c1_*`, carrossel 2 = `foto_c2_*`, cada um com legenda, hashtags e horário sugerido; story = `foto_story.jpg`).
+- Se Acontecesse: o `NNN_slug` mais recente ainda não agendado em `G:\Meu Drive\Área de Trabalho\videos-claude\SeAcontecesse\Episodios`: o `.mp4` final (não `_previa`; prefira `_ig.mp4` para o Instagram se existir) + `post.md`.
 - Material ausente ou incompleto na execução das 08:49: encerre o turno; a das 10:49 repete a busca e segue com o que existir, dizendo o que faltou. Pedido de aprovação já enviado e sem resposta: não envie outro; encerre.
 
 ## 2. Não repetir
