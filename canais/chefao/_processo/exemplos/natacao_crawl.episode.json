@@ -1,0 +1,260 @@
+{
+ "id": "natacao_crawl",
+ "anim": "Swimming.fbx",
+ "peak": {
+  "bone": "Hips",
+  "metric": "minY"
+ },
+ "hookView": "split_threequarter",
+ "watermark": "NADO CRAWL",
+ "topbar": {
+  "left": "VOCÊ · \"SÓ NADAR\"",
+  "right": "CHEFÃO DA PISCINA"
+ },
+ "card": {
+  "name": [
+   "NADO",
+   "CRAWL"
+  ],
+  "rows": [
+   [
+    "MÚSCULOS",
+    "COSTAS · OMBRO"
+   ],
+   [
+    "NÍVEL",
+    "★★★☆☆"
+   ],
+   [
+    "RISCO",
+    "OMBRO · FÔLEGO",
+    "r"
+   ]
+  ]
+ },
+ "captions": [
+  [
+   [
+    "NADA",
+    "r"
+   ],
+   [
+    "CRAWL",
+    "r"
+   ],
+   [
+    "ASSIM?",
+    ""
+   ]
+  ],
+  [
+   [
+    "E",
+    ""
+   ],
+   [
+    "CANSA",
+    "r"
+   ],
+   [
+    "RÁPIDO?",
+    ""
+   ]
+  ],
+  [
+   [
+    "CHEFÃO",
+    ""
+   ],
+   [
+    "DA",
+    ""
+   ],
+   [
+    "PISCINA",
+    "g"
+   ]
+  ],
+  [
+   [
+    "3",
+    "r"
+   ],
+   [
+    "ERROS",
+    ""
+   ],
+   [
+    "CLÁSSICOS",
+    ""
+   ]
+  ],
+  [
+   [
+    "ERRO 1:",
+    ""
+   ],
+   [
+    "CABEÇA",
+    "r"
+   ],
+   [
+    "ALTA",
+    "r"
+   ]
+  ],
+  [
+   [
+    "OLHA",
+    "g"
+   ],
+   [
+    "PRO",
+    "g"
+   ],
+   [
+    "FUNDO",
+    "g"
+   ]
+  ],
+  [
+   [
+    "ERRO 2:",
+    ""
+   ],
+   [
+    "MÃO",
+    "r"
+   ],
+   [
+    "CRUZANDO",
+    "r"
+   ]
+  ],
+  [
+   [
+    "MÃO",
+    "g"
+   ],
+   [
+    "NA LINHA",
+    "g"
+   ],
+   [
+    "DO OMBRO",
+    ""
+   ]
+  ],
+  [
+   [
+    "ERRO 3:",
+    ""
+   ],
+   [
+    "PERNADA",
+    "r"
+   ],
+   [
+    "DE JOELHO",
+    "r"
+   ]
+  ],
+  [
+   [
+    "CHUTA",
+    "g"
+   ],
+   [
+    "DO",
+    ""
+   ],
+   [
+    "QUADRIL",
+    "g"
+   ]
+  ],
+  [
+   [
+    "CRAWL",
+    ""
+   ],
+   [
+    "DESBLOQUEADO",
+    "g"
+   ]
+  ]
+ ],
+ "errors": [
+  {
+   "label": "CABEÇA ALTA",
+   "check": "OLHAR PRO FUNDO",
+   "view": "side_under",
+   "zone": [
+    "Head",
+    "Hips"
+   ],
+   "deform": [],
+   "swim": {
+    "headLift": 0.6,
+    "sink": 0.2
+   },
+   "zoom": 0.75
+  },
+  {
+   "label": "MÃO CRUZANDO O CORPO",
+   "check": "MÃO NA LINHA",
+   "view": "top",
+   "zone": [
+    "LeftHand",
+    "RightHand"
+   ],
+   "deform": [],
+   "swim": {
+    "w": -0.4
+   }
+  },
+  {
+   "label": "PERNADA DE JOELHO",
+   "check": "PERNADA DO QUADRIL",
+   "view": "under_back_threequarter",
+   "zone": [
+    "LeftLeg",
+    "RightLeg"
+   ],
+   "deform": [],
+   "swim": {
+    "kneeAmp": 1.15,
+    "kickAmp": 0.12
+   },
+   "zoom": 0.75
+  }
+ ],
+ "outro": {
+  "next": "NADO COSTAS",
+  "percent": 45
+ },
+ "cta": {
+  "cards": [
+   [
+    "NADO\nCOSTAS",
+    "PISCINA · ★★★☆☆"
+   ],
+   [
+    "NADO\nPEITO",
+    "PISCINA · ★★★☆☆"
+   ],
+   [
+    "BORBOLETA",
+    "PISCINA · ★★★★★"
+   ]
+  ]
+ },
+ "ambiente": "piscina",
+ "swim": {
+  "stroke": "crawl"
+ },
+ "cardView": "split_front",
+ "winView": "split_threequarter",
+ "outView": "split_front",
+ "hookZoom": 0.8
+}

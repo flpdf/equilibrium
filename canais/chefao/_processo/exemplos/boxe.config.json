@@ -1,0 +1,26 @@
+{
+ "anim": "Boxing Jab Cross.fbx",
+ "peak": {
+  "bone": "LeftHand",
+  "metric": "maxZ"
+ },
+ "props": [
+  {
+   "file": "saco-de-pancada.glb",
+   "fit": {
+    "axis": "y",
+    "cm": 170
+   },
+   "pos": [
+    0,
+    0,
+    75
+   ],
+   "rotY": 0,
+   "pend": {}
+  }
+ ],
+ "hookView": "side",
+ "cardView": "side",
+ "outView": "side"
+}

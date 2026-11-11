@@ -1,0 +1,53 @@
+{
+ "anim": "Sitting Still Chair.fbx",
+ "peak": {
+  "bone": "Hips",
+  "metric": "minY"
+ },
+ "props": [
+  {
+   "file": "bicicleta-ergometrica.glb",
+   "fit": {
+    "axis": "y",
+    "cm": 125
+   },
+   "pos": [
+    0,
+    0,
+    0
+   ],
+   "rotY": 0
+  }
+ ],
+ "modelOffset": [
+  0,
+  40,
+  -22
+ ],
+ "pedal": {
+  "rps": 0.9
+ },
+ "baseDeform": [
+  {
+   "bone": "LeftArm",
+   "axis": "z",
+   "angle": 0.7,
+   "mirror": true
+  },
+  {
+   "bone": "LeftUpLeg",
+   "axis": "x",
+   "angle": -0.35
+  },
+  {
+   "bone": "RightUpLeg",
+   "axis": "x",
+   "angle": -0.35
+  },
+  {
+   "bone": "Spine",
+   "axis": "x",
+   "angle": 0.25
+  }
+ ]
+}
