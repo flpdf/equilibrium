@@ -43,7 +43,7 @@
         "deform": {
           "bone": "Hips",
           "axis": "x",
-          "angle": 25
+          "angle": 0.44
         }
       }
     },

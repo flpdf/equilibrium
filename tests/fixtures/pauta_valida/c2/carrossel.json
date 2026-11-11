@@ -19,7 +19,7 @@
         "deform": {
           "bone": "Hips",
           "axis": "x",
-          "angle": -18
+          "angle": -0.31
         }
       }
     },
@@ -37,12 +37,12 @@
           {
             "bone": "LeftArm",
             "axis": "z",
-            "angle": 30
+            "angle": 0.5
           },
           {
             "bone": "RightArm",
             "axis": "z",
-            "angle": -30
+            "angle": -0.5
           }
         ]
       }
@@ -60,7 +60,7 @@
         "deform": {
           "bone": "Neck",
           "axis": "x",
-          "angle": 20
+          "angle": 0.35
         }
       }
     },

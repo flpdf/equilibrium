@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
-"""Valida a pasta de pauta diária do canal Chefão dos Treinos."""
+"""Valida a pasta de pauta diária do canal Chefão dos Treinos.
+
+Uso: python3 validar_pauta.py <pasta> [--json]. Exit 0 = sem erros, 1 = há erros,
+2 = pasta inexistente.
+
+Limites de texto que REPROVAM (ERRO): card.name até 12 caracteres por linha (1-2
+linhas), nome do slide até 14, errado/certo até 28, caption (item) até 24 caracteres
+somados e 4 blocos, check até 20, falas até 45 (falas 2 e 10 até 55), texto info até 140.
+Só AVISO: títulos (22 / 18 por linha), hashtags, card.rows, cta.cards, zone com
+mixamorig, texto de tela em minúsculas, deform.angle que pareça grau (> 3,2 rad).
+Vistas de natação (top, side_under, under_*, split*) só valem com "ambiente":"piscina".
+As regras de conteúdo vêm de regras_conteudo.json.
+"""
 from __future__ import annotations
 
 import argparse
@@ -22,9 +34,15 @@ CORES_CARROSSEL = {"r", "y", "g"}
 CORES_TAG = {"r", "g", "y"}
 VIEWS = {
     "front", "front_low", "high_front", "top_front", "threequarter", "side",
-    "side_left", "low_side", "back", "top", "side_under",
+    "side_left", "low_side", "back",
 }
-PREFIXOS_VIEW = ("under_", "split")
+VIEWS_PISCINA = {"top", "side_under"}
+PREFIXOS_VIEW_PISCINA = ("under_", "split")
+POSES = {"pico", "repouso"}
+MAX_ANGULO_RAD = 3.2
+PROIBIDOS_FBX_VIDEO = (re.compile(r"pike\s+walk\.fbx", re.I),)
+PROIBIDOS_FBX = (re.compile(r"swimming\s+breaststroke\.fbx", re.I),)
+CHAVES_TEXTO_PAUTA = {"tema", "gancho", "exercicio", "erros", "titulo", "itens"}
 EIXOS = {"x", "y", "z"}
 
 N_CAPTIONS = 11
@@ -43,7 +61,7 @@ MAX_LINHA_TITULO_INFO = 18
 MAX_TEXTO_INFO = 140
 HASHTAGS_VIDEO = (6, 8)
 HASHTAGS_CARROSSEL = (6, 10)
-LINHAS_PROIBIDAS = ("postar às", "gerado por ia", "título:")
+LINHAS_PROIBIDAS = ("postar às", "gerado por ia")
 
 
 class Relatorio:
@@ -100,9 +118,55 @@ def exigir_dict(valor: Any, arq: str, rel: Relatorio, ctx: str) -> bool:
     return False
 
 
-def view_valida(view: Any) -> bool:
-    """Confere se a vista de câmera é uma das aceitas."""
-    return isinstance(view, str) and (view in VIEWS or view.startswith(PREFIXOS_VIEW))
+def nome_tipo(valor: Any) -> str:
+    """Nome do tipo JSON do valor, para mensagens."""
+    if isinstance(valor, bool):
+        return "booleano"
+    if isinstance(valor, (int, float)):
+        return "número"
+    return {"list": "lista", "dict": "objeto", "NoneType": "nulo"}.get(type(valor).__name__, "valor")
+
+
+def enum_ok(valor: Any, validos: set[str], arq: str, rel: Relatorio, rotulo: str) -> bool:
+    """Confere que o valor é texto e está no conjunto; registra erro se não."""
+    if not isinstance(valor, str):
+        rel.erro(arq, f"{rotulo}: tipo inválido (esperado texto, veio {nome_tipo(valor)})")
+        return False
+    if valor not in validos:
+        rel.erro(arq, f"{rotulo} '{valor}' fora de {sorted(validos)}")
+        return False
+    return True
+
+
+def view_valida(view: Any, piscina: bool = False) -> bool:
+    """Confere se a vista de câmera é aceita; as de natação só em piscina."""
+    if not isinstance(view, str):
+        return False
+    if view in VIEWS:
+        return True
+    return piscina and (view in VIEWS_PISCINA or view.startswith(PREFIXOS_VIEW_PISCINA))
+
+
+def textos_em(valor: Any) -> list[str]:
+    """Todos os textos dentro de um valor JSON (string, lista ou objeto aninhado)."""
+    if isinstance(valor, str):
+        return [valor]
+    if isinstance(valor, list):
+        return [t for v in valor for t in textos_em(v)]
+    if isinstance(valor, dict):
+        return [t for v in valor.values() for t in textos_em(v)]
+    return []
+
+
+def varrer_fbx(valor: Any, arq: str, rel: Relatorio, video: bool) -> None:
+    """Erro para animações que não funcionam (em qualquer string do JSON)."""
+    proibidos = PROIBIDOS_FBX + (PROIBIDOS_FBX_VIDEO if video else ())
+    for texto in textos_em(valor):
+        for padrao in proibidos:
+            achado = padrao.search(texto)
+            if achado:
+                rel.erro(arq, f"animação proibida '{achado.group(0)}'"
+                              f"{' em vídeo' if padrao in PROIBIDOS_FBX_VIDEO else ''}")
 
 
 def em_maiusculas(texto: str) -> bool:
@@ -119,17 +183,33 @@ def avisar_minusculas(textos: list[str], arq: str, rel: Relatorio, ctx: str) -> 
 
 # ---------------------------------------------------------------- pauta e estado
 
-def validar_pauta_json(dados: Any, rel: Relatorio) -> None:
+def validar_pauta_json(dados: Any, rel: Relatorio, textos: Textos) -> None:
     """Valida pauta.json: campos, 3 vídeos, 3 carrosséis, sem exercício repetido."""
     arq = "pauta.json"
     if not exigir_dict(dados, arq, rel, ""):
         return
     exigir(dados, ["data", "dia", "tema", "status"], arq, rel)
     _validar_data(dados.get("data"), arq, rel)
-    if dados.get("status") not in STATUS_PAUTA:
-        rel.erro(arq, f"status '{dados.get('status')}' fora de {sorted(STATUS_PAUTA)}")
+    if dados.get("status") not in (None, ""):
+        enum_ok(dados["status"], STATUS_PAUTA, arq, rel, "status")
     _validar_videos_pauta(dados.get("videos"), arq, rel)
     _validar_carrosseis_pauta(dados.get("carrosseis"), arq, rel)
+    _coletar_pauta(dados, arq, textos)
+    for chave, valor in dados.items():
+        varrer_fbx(valor, arq, rel, video=chave == "videos")
+
+
+def _coletar_pauta(valor: Any, arq: str, textos: Textos) -> None:
+    """Coleta os textos de pauta.json (tema, gancho, exercício, erros, título, itens)."""
+    if isinstance(valor, dict):
+        for chave, item in valor.items():
+            if chave in CHAVES_TEXTO_PAUTA:
+                textos.extend((arq, t) for t in textos_em(item))
+            else:
+                _coletar_pauta(item, arq, textos)
+    elif isinstance(valor, list):
+        for item in valor:
+            _coletar_pauta(item, arq, textos)
 
 
 def _validar_data(data: Any, arq: str, rel: Relatorio) -> None:
@@ -163,8 +243,8 @@ def _validar_videos_pauta(videos: Any, arq: str, rel: Relatorio) -> None:
                arq, rel, ctx)
         if video.get("id") != f"v{i}":
             rel.erro(arq, f"{ctx}id deve ser 'v{i}', veio '{video.get('id')}'")
-        if video.get("slot") not in SLOTS:
-            rel.erro(arq, f"{ctx}slot '{video.get('slot')}' fora de {sorted(SLOTS)}")
+        if video.get("slot") not in (None, ""):
+            enum_ok(video["slot"], SLOTS, arq, rel, f"{ctx}slot")
         if video.get("postar") and not _hora_valida(video.get("postar")):
             rel.erro(arq, f"{ctx}postar '{video.get('postar')}' não é HH:MM")
         arquivo = video.get("arquivo")
@@ -205,8 +285,7 @@ def validar_estado_json(dados: Any, rel: Relatorio) -> None:
         return
     for campo, validos in (("pauta", ESTADO_PAUTA), ("audio", ESTADO_AUDIO),
                            ("producao", ESTADO_PRODUCAO)):
-        if dados.get(campo) not in validos:
-            rel.erro(arq, f"'{campo}' = '{dados.get(campo)}' fora de {sorted(validos)}")
+        enum_ok(dados.get(campo), validos, arq, rel, f"'{campo}' =")
 
 
 # ---------------------------------------------------------------- visual compartilhado
@@ -236,15 +315,17 @@ def _validar_deform(deform: Any, arq: str, rel: Relatorio, ctx: str) -> None:
             continue
         if not (isinstance(item.get("bone"), str) and item["bone"]):
             rel.erro(arq, f"{rotulo}'bone' ausente")
-        if item.get("axis") not in EIXOS:
-            rel.erro(arq, f"{rotulo}'axis' '{item.get('axis')}' fora de x, y, z")
-        if not eh_numero(item.get("angle")):
+        enum_ok(item.get("axis"), EIXOS, arq, rel, f"{rotulo}'axis'")
+        angulo = item.get("angle")
+        if not eh_numero(angulo):
             rel.erro(arq, f"{rotulo}'angle' deve ser número")
+        elif abs(angulo) > MAX_ANGULO_RAD:
+            rel.aviso(arq, f"{rotulo}angle {angulo} parece graus; o campo é em radianos")
 
 
-def _validar_visual(obj: dict, arq: str, rel: Relatorio, ctx: str) -> None:
+def _validar_visual(obj: dict, arq: str, rel: Relatorio, ctx: str, piscina: bool = False) -> None:
     """Valida view, zone e deform de um erro (episódio ou slide de carrossel)."""
-    if not view_valida(obj.get("view")):
+    if not view_valida(obj.get("view"), piscina):
         rel.erro(arq, f"{ctx}view '{obj.get('view')}' inválida")
     if obj.get("zone") in (None, "", []):
         rel.erro(arq, f"{ctx}campo 'zone' ausente")
@@ -262,18 +343,51 @@ def validar_episode(dados: Any, nome: str, rel: Relatorio, textos: Textos) -> No
     """Valida vN/episode.json e coleta os textos de tela."""
     if not exigir_dict(dados, nome, rel, ""):
         return
+    piscina = dados.get("ambiente") == "piscina"
+    _validar_anim_peak(dados, nome, rel)
     _validar_captions(dados.get("captions"), nome, rel, textos)
-    _validar_errors(dados.get("errors"), nome, rel, textos)
+    _validar_errors(dados.get("errors"), nome, rel, textos, piscina)
     _validar_card(dados.get("card"), nome, rel, textos)
+    topbar = dados.get("topbar")
+    if isinstance(topbar, dict):
+        textos.extend((nome, t) for c in ("left", "right") for t in textos_em(topbar.get(c)))
     outro = dados.get("outro")
-    if isinstance(outro, dict) and "percent" in outro:
-        pct = outro["percent"]
-        if not (eh_numero(pct) and 20 <= pct <= 80):
-            rel.erro(nome, f"outro.percent '{pct}' deve estar entre 20 e 80")
+    if isinstance(outro, dict):
+        textos.extend((nome, t) for t in textos_em(outro.get("next")))
+        if "percent" in outro:
+            pct = outro["percent"]
+            if not (eh_numero(pct) and 20 <= pct <= 80):
+                rel.erro(nome, f"outro.percent '{pct}' deve estar entre 20 e 80")
     cta = dados.get("cta")
     if isinstance(cta, dict) and "cards" in cta:
-        if not (isinstance(cta["cards"], list) and len(cta["cards"]) == 3):
-            rel.aviso(nome, "cta.cards deveria ter 3 itens")
+        _validar_cta_cards(cta["cards"], nome, rel, textos)
+    varrer_fbx(dados, nome, rel, video=True)
+
+
+def _validar_anim_peak(dados: dict, nome: str, rel: Relatorio) -> None:
+    """Exige anim (.fbx) e peak {bone, metric} no episode.json."""
+    anim = dados.get("anim")
+    if anim in (None, "", []):
+        rel.erro(nome, "campo 'anim' ausente ou vazio")
+    elif not (isinstance(anim, str) and anim.endswith(".fbx")):
+        rel.erro(nome, f"anim '{anim}' deve ser texto terminado em .fbx")
+    peak = dados.get("peak")
+    if peak in (None, "", []):
+        rel.erro(nome, "campo 'peak' ausente ou vazio")
+    elif not (isinstance(peak, dict) and all(
+            isinstance(peak.get(c), str) and peak[c] for c in ("bone", "metric"))):
+        rel.erro(nome, "'peak' deve ser objeto com 'bone' e 'metric'")
+
+
+def _validar_cta_cards(cards: Any, nome: str, rel: Relatorio, textos: Textos) -> None:
+    """Avisa se cta.cards não for 3 itens [nome, grupo]; coleta os textos."""
+    if not (isinstance(cards, list) and len(cards) == 3):
+        rel.aviso(nome, "cta.cards deveria ter 3 itens")
+    if isinstance(cards, list):
+        for i, item in enumerate(cards, 1):
+            if not (isinstance(item, list) and len(item) == 2 and all(isinstance(x, str) for x in item)):
+                rel.aviso(nome, f"cta.cards[{i}]: deveria ser lista de 2 textos")
+    textos.extend((nome, t) for t in textos_em(cards))
 
 
 def _validar_captions(captions: Any, nome: str, rel: Relatorio, textos: Textos) -> None:
@@ -290,18 +404,18 @@ def _validar_captions(captions: Any, nome: str, rel: Relatorio, textos: Textos) 
             rel.erro(nome, f"{ctx}deve ser lista de pares [texto, cor]")
             continue
         for par in item:
-            if par[1] not in CORES_CAPTION:
-                rel.erro(nome, f"{ctx}cor '{par[1]}' fora de \"\", \"r\", \"g\"")
+            enum_ok(par[1], CORES_CAPTION, nome, rel, f"{ctx}cor")
             textos.append((nome, par[0]))
         if len(item) > MAX_PARES_CAPTION:
-            rel.aviso(nome, f"{ctx}{len(item)} pares (máximo {MAX_PARES_CAPTION})")
+            rel.erro(nome, f"{ctx}{len(item)} pares (máximo {MAX_PARES_CAPTION})")
         soma = sum(len(par[0]) for par in item)
         if soma > MAX_CHARS_CAPTION:
-            rel.aviso(nome, f"{ctx}{soma} caracteres (máximo {MAX_CHARS_CAPTION})")
+            rel.erro(nome, f"{ctx}{soma} caracteres (máximo {MAX_CHARS_CAPTION})")
         avisar_minusculas([par[0] for par in item], nome, rel, ctx)
 
 
-def _validar_errors(erros: Any, nome: str, rel: Relatorio, textos: Textos) -> None:
+def _validar_errors(erros: Any, nome: str, rel: Relatorio, textos: Textos,
+                    piscina: bool = False) -> None:
     """Valida os 3 erros do episódio: label, check, view, zone e deform."""
     if not isinstance(erros, list) or len(erros) != 3:
         rel.erro(nome, "'errors' deve ter exatamente 3 itens")
@@ -318,7 +432,7 @@ def _validar_errors(erros: Any, nome: str, rel: Relatorio, textos: Textos) -> No
         check = erro.get("check")
         if isinstance(check, str) and len(check) > MAX_CHECK:
             rel.erro(nome, f"{ctx}check com {len(check)} caracteres (máximo {MAX_CHECK})")
-        _validar_visual(erro, nome, rel, ctx)
+        _validar_visual(erro, nome, rel, ctx, piscina)
 
 
 def _validar_card(card: Any, nome: str, rel: Relatorio, textos: Textos) -> None:
@@ -329,12 +443,21 @@ def _validar_card(card: Any, nome: str, rel: Relatorio, textos: Textos) -> None:
     linhas = card.get("name")
     if not (isinstance(linhas, list) and 1 <= len(linhas) <= 2
             and all(isinstance(x, str) and len(x) <= MAX_LINHA_NOME_CARD for x in linhas)):
-        rel.aviso(nome, f"card.name deve ter 1-2 linhas de até {MAX_LINHA_NOME_CARD} caracteres")
+        rel.erro(nome, f"card.name deve ter 1-2 linhas de até {MAX_LINHA_NOME_CARD} caracteres")
     if isinstance(linhas, list):
         textos.extend((nome, x) for x in linhas if isinstance(x, str))
         avisar_minusculas(linhas, nome, rel, "card.name: ")
-    if not (isinstance(card.get("rows"), list) and len(card["rows"]) == 3):
+    rows = card.get("rows")
+    if not (isinstance(rows, list) and len(rows) == 3):
         rel.aviso(nome, "card.rows deveria ter 3 linhas")
+    if isinstance(rows, list):
+        for i, linha in enumerate(rows, 1):
+            if not (isinstance(linha, list) and len(linha) in (2, 3)
+                    and all(isinstance(x, str) for x in linha)):
+                rel.aviso(nome, f"card.rows[{i}]: deveria ser lista de 2 ou 3 textos")
+            elif len(linha) == 3 and linha[2] != "r":
+                rel.aviso(nome, f"card.rows[{i}]: terceiro item deve ser \"r\"")
+    textos.extend((nome, t) for t in textos_em(rows))
 
 
 # ---------------------------------------------------------------- narration.json
@@ -371,14 +494,18 @@ def validar_legenda(raiz: Path, nome: str, faixa: tuple[int, int], rel: Relatori
     if not caminho.is_file():
         rel.erro(nome, "arquivo ausente")
         return
-    texto = caminho.read_text(encoding="utf-8")
+    try:
+        texto = caminho.read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        rel.erro(nome, f"arquivo não está em UTF-8: {exc}")
+        return
     if not texto.strip():
         rel.erro(nome, "legenda vazia")
         return
     textos.append((nome, texto))
     for n, linha in enumerate(texto.splitlines(), 1):
         baixa = linha.strip().casefold()
-        if baixa.startswith("⚠") or any(p in baixa for p in LINHAS_PROIBIDAS):
+        if "⚠" in baixa or baixa.startswith("título:") or any(p in baixa for p in LINHAS_PROIBIDAS):
             rel.erro(nome, f"linha {n} não pode ir ao ar: '{linha.strip()}'")
     total = len(re.findall(r"#\w+", texto))
     if not faixa[0] <= total <= faixa[1]:
@@ -394,9 +521,13 @@ def validar_carrossel(dados: Any, nome: str, id_esperado: str, rel: Relatorio,
         return
     if dados.get("id") != id_esperado:
         rel.erro(nome, f"id deve ser '{id_esperado}', veio '{dados.get('id')}'")
-    if dados.get("cor") not in CORES_CARROSSEL:
-        rel.erro(nome, f"cor '{dados.get('cor')}' fora de {sorted(CORES_CARROSSEL)}")
+    enum_ok(dados.get("cor"), CORES_CARROSSEL, nome, rel, "cor")
     _validar_titulo_carrossel(dados.get("titulo"), nome, rel, textos)
+    cta = dados.get("cta")
+    if isinstance(cta, dict):
+        textos.extend((nome, t) for c in ("pergunta", "sub", "botao") for t in textos_em(cta.get(c)))
+    textos.extend((nome, t) for t in textos_em(dados.get("arrasta")))
+    varrer_fbx(dados, nome, rel, video=False)
     slides = dados.get("slides")
     if not isinstance(slides, list) or len(slides) != 4:
         rel.erro(nome, "'slides' deve ter exatamente 4 itens")
@@ -443,11 +574,11 @@ def _validar_titulo_carrossel(titulo: Any, nome: str, rel: Relatorio, textos: Te
             rel.aviso(nome, f"linha de titulo '{linha}' passa de {MAX_LINHA_TITULO_CARROSSEL} caracteres")
 
 
-def _limite_aviso(slide: dict, campo: str, limite: int, nome: str, rel: Relatorio, ctx: str) -> None:
-    """Avisa se o campo de texto passa do limite."""
+def _limite_erro(slide: dict, campo: str, limite: int, nome: str, rel: Relatorio, ctx: str) -> None:
+    """Erro se o campo de texto passa do limite."""
     valor = slide.get(campo)
     if isinstance(valor, str) and len(valor) > limite:
-        rel.aviso(nome, f"{ctx}'{campo}' com {len(valor)} caracteres (máximo {limite})")
+        rel.erro(nome, f"{ctx}'{campo}' com {len(valor)} caracteres (máximo {limite})")
 
 
 def _coletar(slide: dict, campos: list[str], nome: str, textos: Textos) -> None:
@@ -458,9 +589,9 @@ def _coletar(slide: dict, campos: list[str], nome: str, textos: Textos) -> None:
 def _validar_slide_erro(slide: dict, nome: str, rel: Relatorio, ctx: str, textos: Textos) -> None:
     """Valida um slide do tipo erro."""
     exigir(slide, ["kicker", "nome", "anim", "errado", "certo", "erro"], nome, rel, ctx)
-    _limite_aviso(slide, "nome", MAX_NOME_SLIDE, nome, rel, ctx)
-    _limite_aviso(slide, "errado", MAX_ERRADO_CERTO, nome, rel, ctx)
-    _limite_aviso(slide, "certo", MAX_ERRADO_CERTO, nome, rel, ctx)
+    _limite_erro(slide, "nome", MAX_NOME_SLIDE, nome, rel, ctx)
+    _limite_erro(slide, "errado", MAX_ERRADO_CERTO, nome, rel, ctx)
+    _limite_erro(slide, "certo", MAX_ERRADO_CERTO, nome, rel, ctx)
     if isinstance(slide.get("anim"), str) and not slide["anim"].endswith(".fbx"):
         rel.erro(nome, f"{ctx}anim '{slide['anim']}' deve terminar em .fbx")
     _coletar(slide, ["kicker", "nome", "errado", "certo"], nome, textos)
@@ -473,8 +604,12 @@ def _validar_slide_erro(slide: dict, nome: str, rel: Relatorio, ctx: str, textos
 def _validar_slide_info(slide: dict, nome: str, rel: Relatorio, ctx: str, textos: Textos) -> None:
     """Valida um slide do tipo info."""
     exigir(slide, ["tag", "titulo", "anim", "view", "texto"], nome, rel, ctx)
-    if "tagcor" in slide and slide["tagcor"] not in CORES_TAG:
-        rel.erro(nome, f"{ctx}tagcor '{slide['tagcor']}' fora de {sorted(CORES_TAG)}")
+    if "tagcor" in slide:
+        enum_ok(slide["tagcor"], CORES_TAG, nome, rel, f"{ctx}tagcor")
+    if "view" in slide and slide["view"] not in (None, "", []) and not view_valida(slide["view"]):
+        rel.erro(nome, f"{ctx}view '{slide['view']}' inválida")
+    if "pose" in slide:
+        enum_ok(slide["pose"], POSES, nome, rel, f"{ctx}pose")
     if slide.get("titulo") not in (None, "", []):
         linhas = _linhas_titulo(slide["titulo"], nome, rel, ctx)
         if linhas is not None:
@@ -523,7 +658,7 @@ def validar_pasta(raiz: Path) -> Relatorio:
         return rel
     pauta = carregar_json(raiz, "pauta.json", rel)
     if pauta is not None:
-        validar_pauta_json(pauta, rel)
+        validar_pauta_json(pauta, rel, textos)
     estado = carregar_json(raiz, "estado.json", rel, ausente_e_erro=False)
     if estado is not None:
         validar_estado_json(estado, rel)
@@ -581,6 +716,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("pasta", type=Path, help="pasta da pauta")
     ap.add_argument("--json", action="store_true", help="saída em JSON")
     args = ap.parse_args(argv)
+    if not args.pasta.is_dir():
+        print(f"ERRO: pasta da pauta não encontrada: {args.pasta}", file=sys.stderr)
+        return 2
     rel = validar_pasta(args.pasta)
     if args.json:
         print(json.dumps({

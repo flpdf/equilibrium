@@ -1,22 +1,22 @@
 [
   {
-    "padrao": "\\b\\d+\\s*(kg|quilos?|reps?|repeti\\w*|séries?|series|calorias?|kcal)\\b",
-    "motivo": "Número de carga, séries, repetições ou calorias: o canal não prescreve volume de treino."
+    "padrao": "\\b\\d+\\s*(kg|quilos?|reps?|repeti\\w*|séries?|series|calorias?|kcal)\\b|\\b(um|uma|dois|duas|três|quatro|cinco|seis|sete|oito|nove|dez|onze|doze|quinze|vinte|trinta|quarenta|cinquenta|cem)\\s+(kg|quilos?|reps?|repeti\\w*|séries?|series|calorias?|kcal)\\b|\\d+\\s*x\\s*\\d+|\\bkm/h\\b",
+    "motivo": "Número de carga, séries, repetições, calorias ou velocidade: o canal não prescreve volume de treino."
   },
   {
-    "padrao": "emagre|queima(r)? gordura|perde(r)? \\d|ganh(e|ar) (massa|músculo)|resultado garantido|garantid",
+    "padrao": "emagre|queim[ae]r?\\s+(de\\s+)?gordura|perc[ae]r?\\s+peso|\\bperd(e|er)\\s+\\d+\\s*(kg|quilos?)|ganh(e|ar) (massa|músculo)|resultado garantido|(resultado|hipertrofia|ganho|emagrecimento)\\w*\\s+garantid\\w*",
     "motivo": "Promessa de resultado (emagrecer, perder peso, ganhar massa, garantia): não pode ser prometido."
   },
   {
-    "padrao": "lesão garantida|vai (se )?lesionar|diagn",
+    "padrao": "lesão garantida|vai (se )?lesionar|\\blesionar\\b|diagn",
     "motivo": "Diagnóstico ou previsão de lesão e dor: o canal não faz diagnóstico."
   },
   {
-    "padrao": "\\bcura(r|rá)?\\b|\\btrata(mento)?\\b",
+    "padrao": "\\bcura(r|rá)\\b|\\bcura\\s+(d[oae]|para)\\b|\\btratamento\\b",
     "motivo": "Promessa de cura ou tratamento: é linguagem de saúde, fora do escopo do canal."
   },
   {
-    "padrao": "suplemento|whey|creatina|anabol|remédio|medicamento",
+    "padrao": "suplemento|whey|creatina|anabol|\\btom(e|ar)\\s+remédio|medicamento",
     "motivo": "Conselho médico ou de suplementação: não pode aparecer no conteúdo."
   }
 ]

@@ -1,4 +1,14 @@
 {
+  "anim": "pushup.fbx",
+  "peak": {
+    "bone": "Hips",
+    "metric": "y"
+  },
+  "watermark": "@chefaodostreinos",
+  "topbar": {
+    "left": "VOCÊ · \"TÁ BOM ASSIM\"",
+    "right": "CHEFÃO DO PEITO"
+  },
   "captions": [
     [
       [
@@ -80,7 +90,7 @@
       "deform": {
         "bone": "Hips",
         "axis": "x",
-        "angle": -18
+        "angle": -0.31
       }
     },
     {
@@ -92,12 +102,12 @@
         {
           "bone": "LeftArm",
           "axis": "z",
-          "angle": 30
+          "angle": 0.5
         },
         {
           "bone": "RightArm",
           "axis": "z",
-          "angle": -30
+          "angle": -0.5
         }
       ]
     },
@@ -109,7 +119,7 @@
       "deform": {
         "bone": "Neck",
         "axis": "x",
-        "angle": 20
+        "angle": 0.35
       }
     }
   ],
@@ -118,19 +128,39 @@
       "FLEXÃO"
     ],
     "rows": [
-      "PEITO",
-      "OMBROS",
-      "TRÍCEPS"
+      [
+        "MÚSCULOS",
+        "PEITO"
+      ],
+      [
+        "NÍVEL",
+        "★☆☆"
+      ],
+      [
+        "RISCO",
+        "MÉDIO",
+        "r"
+      ]
     ]
   },
   "outro": {
-    "percent": 50
+    "percent": 50,
+    "next": "Prancha"
   },
   "cta": {
     "cards": [
-      "SEGUIR",
-      "SALVAR",
-      "COMPARTILHAR"
+      [
+        "PRANCHA",
+        "CORE · ★★☆☆☆"
+      ],
+      [
+        "FLEXÃO",
+        "PEITO · ★★★☆☆"
+      ],
+      [
+        "AFUNDO",
+        "PERNAS · ★★☆☆☆"
+      ]
     ]
   }
 }

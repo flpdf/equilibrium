@@ -18,6 +18,14 @@ CPS_MAX = 25.0
 LIMIAR_SIMILARIDADE = 0.8
 MODELO_PADRAO = "small"
 EXTENSOES = (".mp3", ".wav")
+N_FALAS = 10
+FATOR_ACELERACAO = 1.25  # a montagem acelera a narração até 1,25x
+# Janelas documentadas (segundos, antes da aceleração): gancho 0-3,4 s e cartão 3,4-7,2 s.
+JANELAS_PADRAO = {1: 3.4 * FATOR_ACELERACAO, 2: 3.8 * FATOR_ACELERACAO}
+
+
+class ArquivoInvalido(RuntimeError):
+    """O áudio existe mas o ffprobe não consegue lê-lo."""
 
 
 # ---------------------------------------------------------------- lógica pura
@@ -50,7 +58,8 @@ def classificar_ritmo(cps: float) -> str | None:
 
 
 def classificar_fala(duracao: float, volume_medio: float | None, roteiro: str,
-                     ouvido: str | None, limiar: float = LIMIAR_SIMILARIDADE) -> list[str]:
+                     ouvido: str | None, limiar: float = LIMIAR_SIMILARIDADE,
+                     janela: float | None = None) -> list[str]:
     """Lista os motivos para refazer a fala (vazia se estiver OK)."""
     motivos: list[str] = []
     if volume_medio is not None and volume_medio < LIMIAR_SEM_VOZ_DB:
@@ -58,6 +67,8 @@ def classificar_fala(duracao: float, volume_medio: float | None, roteiro: str,
     ritmo = classificar_ritmo(calcular_cps(roteiro, duracao))
     if ritmo:
         motivos.append(ritmo)
+    if janela is not None and duracao > janela:
+        motivos.append(f"longa demais para a cena ({duracao:.2f} s > {janela:.2f} s)")
     if ouvido is not None:
         sim = similaridade(roteiro, ouvido)
         if sim < limiar:
@@ -76,14 +87,28 @@ def parse_volume_medio(saida_ffmpeg: str) -> float | None:
 # ---------------------------------------------------------------- ffmpeg e whisper
 
 def duracao_ffprobe(arquivo: Path) -> float:
-    """Duração em segundos via ffprobe; levanta RuntimeError se não abrir."""
+    """Duração em segundos via ffprobe.
+
+    Levanta ArquivoInvalido se o arquivo não abrir ou tiver duração <= 0, e
+    RuntimeError se o ffprobe nem rodar.
+    """
     cmd = ["ffprobe", "-v", "error", "-show_entries", "format=duration",
            "-of", "default=nw=1:nk=1", str(arquivo)]
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
-        return float(r.stdout.strip())
-    except (OSError, ValueError, subprocess.SubprocessError) as exc:
-        raise RuntimeError(f"ffprobe não abriu o arquivo: {exc}") from exc
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise RuntimeError(f"ffprobe indisponível: {exc}") from exc
+    linhas = r.stderr.strip().splitlines()
+    detalhe = linhas[0] if linhas else "sem detalhe"
+    if r.returncode != 0:
+        raise ArquivoInvalido(f"arquivo inválido ({detalhe})")
+    try:
+        duracao = float(r.stdout.strip())
+    except ValueError as exc:
+        raise ArquivoInvalido(f"arquivo inválido ({detalhe})") from exc
+    if not duracao > 0:  # também pega NaN
+        raise ArquivoInvalido("arquivo inválido (duração zero)")
+    return duracao
 
 
 def volume_medio(arquivo: Path) -> float | None:
@@ -128,28 +153,41 @@ def achar_arquivo(pasta: Path, n: int) -> Path | None:
 
 
 def checar_fala(arquivo: Path | None, roteiro: str, whisper: Any | None,
-                limiar: float) -> dict[str, Any]:
+                limiar: float, janela: float | None = None) -> dict[str, Any]:
     """Confere uma fala e devolve a entrada do qa.json."""
     base: dict[str, Any] = {"ok": False, "duracao": None, "cps": None, "volume_db": None,
                             "roteiro": roteiro, "ouvido": None, "transcricao": None,
                             "similaridade": None, "motivos": [], "erro": None}
     if arquivo is None:
-        base["erro"] = "arquivo de áudio ausente"
+        base["motivos"] = ["arquivo ausente"]
         return base
     try:
         duracao = duracao_ffprobe(arquivo)
+    except ArquivoInvalido as exc:
+        base["motivos"] = [str(exc)]
+        return base
     except RuntimeError as exc:
         base["erro"] = str(exc)
         return base
     volume = volume_medio(arquivo)
-    ouvido = transcrever(whisper, arquivo) if whisper is not None else None
     base.update(duracao=round(duracao, 2), cps=round(calcular_cps(roteiro, duracao), 1),
-                volume_db=volume if volume is None or volume != float("-inf") else -120.0,
-                ouvido=ouvido, transcricao=ouvido)
+                volume_db=volume if volume is None or volume != float("-inf") else -120.0)
+    if volume is None:
+        base["erro"] = "volumedetect falhou"
+        return base
+    ouvido: str | None = None
+    avisos: list[str] = []
+    if whisper is not None:
+        try:
+            ouvido = transcrever(whisper, arquivo)
+        except Exception as exc:  # falha do whisper não reprova a fala
+            avisos.append(f"transcrição falhou: {exc}")
+    base.update(ouvido=ouvido, transcricao=ouvido)
     if ouvido is not None:
         base["similaridade"] = round(similaridade(roteiro, ouvido), 2)
-    base["motivos"] = classificar_fala(duracao, volume, roteiro, ouvido, limiar)
-    base["ok"] = not base["motivos"]
+    reprova = classificar_fala(duracao, volume, roteiro, ouvido, limiar, janela)
+    base["motivos"] = reprova + avisos
+    base["ok"] = not reprova
     return base
 
 
@@ -158,7 +196,8 @@ def resumo_linha(chave: str, e: dict[str, Any]) -> str:
     if e["erro"]:
         return f"{chave} ERRO: {e['erro']}"
     if e["ok"]:
-        return f"{chave} OK {e['duracao']:.1f}s"
+        avisos = f" (aviso: {'; '.join(e['motivos'])})" if e["motivos"] else ""
+        return f"{chave} OK {e['duracao']:.1f}s{avisos}"
     return f"{chave} REFAZER: {'; '.join(e['motivos'])}"
 
 
@@ -171,6 +210,16 @@ def ler_falas(narration: Path) -> list[str]:
     return falas
 
 
+def ler_janelas(arquivo: Path) -> dict[int, float | None]:
+    """Lê a lista de 10 durações máximas (s) por fala; null = sem limite."""
+    dados = json.loads(arquivo.read_text(encoding="utf-8"))
+    if not (isinstance(dados, list) and len(dados) == N_FALAS and all(
+            j is None or (isinstance(j, (int, float)) and not isinstance(j, bool) and j > 0)
+            for j in dados)):
+        raise ValueError(f"deve ser uma lista de {N_FALAS} números positivos (ou null)")
+    return {n: j for n, j in enumerate(dados, 1)}
+
+
 def main(argv: list[str] | None = None) -> int:
     """Ponto de entrada: confere as falas, grava o qa.json e devolve o exit code."""
     ap = argparse.ArgumentParser(description="Confere narrações fala por fala.")
@@ -180,23 +229,36 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--modelo", default=MODELO_PADRAO)
     ap.add_argument("--limiar", type=float, default=LIMIAR_SIMILARIDADE)
     ap.add_argument("--sem-whisper", action="store_true")
+    ap.add_argument("--janelas", type=Path, default=None,
+                    help="janelas.json: lista de 10 durações máximas (s); "
+                         "padrão: fala 1 até 3,4 s e fala 2 até 3,8 s, x1,25")
     args = ap.parse_args(argv)
+    if not args.pasta_falas.is_dir():
+        print(f"ERRO: pasta de falas não encontrada: {args.pasta_falas}", file=sys.stderr)
+        return 2
     try:
         falas = ler_falas(args.narration)
+        janelas = ler_janelas(args.janelas) if args.janelas else JANELAS_PADRAO
     except (OSError, ValueError) as exc:
-        print(f"ERRO ao ler {args.narration}: {exc}", file=sys.stderr)
+        print(f"ERRO ao ler entrada: {exc}", file=sys.stderr)
+        return 2
+    if len(falas) != N_FALAS:
+        print(f"ERRO: {args.narration} tem {len(falas)} falas (esperado {N_FALAS})", file=sys.stderr)
         return 2
     whisper = None if args.sem_whisper else carregar_whisper(args.modelo)
     if whisper is None and not args.sem_whisper:
         print("AVISO: transcrição pulada (whisper indisponível).", file=sys.stderr)
-    qa: dict[str, dict[str, Any]] = {}
+    falas_qa: dict[str, dict[str, Any]] = {}
     for n, roteiro in enumerate(falas, 1):
         chave = f"{n:02d}"
-        qa[chave] = checar_fala(achar_arquivo(args.pasta_falas, n), roteiro, whisper, args.limiar)
-        print(resumo_linha(chave, qa[chave]))
+        falas_qa[chave] = checar_fala(achar_arquivo(args.pasta_falas, n), roteiro, whisper,
+                                      args.limiar, janelas.get(n))
+        print(resumo_linha(chave, falas_qa[chave]))
     saida = args.saida or args.pasta_falas / "qa.json"
+    saida.parent.mkdir(parents=True, exist_ok=True)
+    qa = {"transcricao_pulada": whisper is None, "falas": falas_qa}
     saida.write_text(json.dumps(qa, ensure_ascii=False, indent=2), encoding="utf-8")
-    return 0 if all(e["ok"] for e in qa.values()) else 1
+    return 0 if all(e["ok"] for e in falas_qa.values()) else 1
 
 
 if __name__ == "__main__":

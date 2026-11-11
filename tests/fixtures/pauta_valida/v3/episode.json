@@ -1,4 +1,14 @@
 {
+  "anim": "plank.fbx",
+  "peak": {
+    "bone": "Hips",
+    "metric": "y"
+  },
+  "watermark": "@chefaodostreinos",
+  "topbar": {
+    "left": "VOCÊ · \"TÁ BOM ASSIM\"",
+    "right": "CHEFÃO DO CORE"
+  },
   "captions": [
     [
       [
@@ -80,7 +90,7 @@
       "deform": {
         "bone": "Hips",
         "axis": "x",
-        "angle": 25
+        "angle": 0.44
       }
     },
     {
@@ -92,12 +102,12 @@
         {
           "bone": "LeftShoulder",
           "axis": "y",
-          "angle": 10
+          "angle": 0.2
         },
         {
           "bone": "RightShoulder",
           "axis": "y",
-          "angle": -10
+          "angle": -0.2
         }
       ]
     },
@@ -109,7 +119,7 @@
       "deform": {
         "bone": "Head",
         "axis": "x",
-        "angle": -20
+        "angle": -0.35
       }
     }
   ],
@@ -118,19 +128,39 @@
       "PRANCHA"
     ],
     "rows": [
-      "CORE",
-      "OMBROS",
-      "GLÚTEOS"
+      [
+        "MÚSCULOS",
+        "CORE"
+      ],
+      [
+        "NÍVEL",
+        "★☆☆"
+      ],
+      [
+        "RISCO",
+        "MÉDIO",
+        "r"
+      ]
     ]
   },
   "outro": {
-    "percent": 50
+    "percent": 50,
+    "next": "Agachamento"
   },
   "cta": {
     "cards": [
-      "SEGUIR",
-      "SALVAR",
-      "COMPARTILHAR"
+      [
+        "PRANCHA",
+        "CORE · ★★☆☆☆"
+      ],
+      [
+        "FLEXÃO",
+        "PEITO · ★★★☆☆"
+      ],
+      [
+        "AFUNDO",
+        "PERNAS · ★★☆☆☆"
+      ]
     ]
   }
 }
