@@ -25,17 +25,17 @@ Em resumo: o Opus foi usado como operador de linha de montagem. Ele deveria ser 
 
 | Etapa | O que é | Natureza | Quem faz | Modelo |
 |---|---|---|---|---|
-| Escolha do tema e dos exercícios | Seguir trilha do `grade.json`, evitar repetição | Determinístico | script `escolher_pauta.py` | nenhum |
+| Escolha do tema e dos exercícios | Seguir trilha do `grade.json`, evitar repetição | Determinístico | script `escolher_pauta.py` (a criar) | nenhum |
 | Pesquisa de números (Se Acontecesse) | Buscar fonte confiável por número | Leitura e síntese | agente `pesquisador` | Haiku com busca; Sonnet se a fonte for ambígua |
 | Roteiro, falas, legendas, carrossel | Texto criativo dentro de molde rígido | Criativo guiado | agente `roteirista` | Sonnet |
 | Validação da pauta | 11 captions, 10 falas, limites de caracteres, palavras proibidas | Determinístico | script `validar_pauta.py` | nenhum |
 | Pauta para o Felipe e ajustes | Mensagem curta; reescrever só o item afetado | Texto | `roteirista` | Sonnet |
-| Geração de narração | Chamar TTS fala por fala | Mecânico | script `gerar_audio.py` | Haiku dispara |
+| Geração de narração | Chamar TTS fala por fala | Mecânico | script `gerar_audio.py` (a criar) | Haiku dispara |
 | Checagem de narração | Transcrever e comparar com o roteiro | Determinístico | faster-whisper local + script | nenhum |
 | Stills e folha de contato | Renderizar quadros | Mecânico | script | nenhum |
 | Conferência visual | Erro visível? boneco inteiro? texto estourando? | Julgamento visual | agente `conferente` | Sonnet (Haiku como primeira triagem) |
-| Correção de deform ou vista | Ajustar parâmetros do `episode.json` | Julgamento técnico | `conferente` até 2 rodadas; depois escala | Sonnet, escala para Opus |
-| Render, montagem, loudnorm, capa | ffmpeg e render.js | Mecânico | script `producao.py` | nenhum |
+| Correção de deform ou vista | Ajustar parâmetros do `episode.json` | Julgamento técnico | `conferente` até 4 rodadas por vídeo (3 por carrossel); depois escala | Sonnet, escala para Opus |
+| Render, montagem, loudnorm, capa | ffmpeg e render.js | Mecânico | script `producao.py` (a criar) | nenhum |
 | Entrega no Drive, histórico, mensagem | Copiar, CSV, resumo | Mecânico | script + Haiku para a mensagem | Haiku |
 | Portões entre etapas | "Está pronto?" | Determinístico | a mesma tarefa agendada, em horários fixos, sessão nova e curta | o da etapa |
 
@@ -44,7 +44,7 @@ Resultado esperado: Opus some do dia a dia. Sonnet escreve e olha. Haiku opera. 
 ## 4. Mudanças estruturais
 
 1. **Modelo por tarefa agendada.** Cada tarefa agendada (PAUTA, ÁUDIO, PRODUÇÃO) passa a nascer com o modelo da etapa, não com o da conta. É a maior alavanca e não exige mudar nenhum script.
-2. **Skill curta, referência em arquivos.** A skill vira uma página: qual etapa, qual script rodar, o que fazer com a saída. Tabelas de deform, esquemas de JSON e regras de conteúdo vão para `docs/` e `exemplos/` e entram no contexto só quando o passo precisa.
+2. **Skill curta, referência em arquivos.** A skill vira uma página: qual etapa, qual script rodar, o que fazer com a saída. Tabelas de deform, esquemas de JSON e regras de conteúdo vão para `reference/` dentro da skill e entram no contexto só quando o passo precisa.
 3. **Portões sem acumular contexto.** Em vez de `send_later` na mesma sessão, a etapa termina quando o portão está fechado, e a própria tarefa agendada roda de novo em horários fixos (ex.: áudio às 23:07 e 00:07; produção às 01:07, 03:07 e 05:07). Cada execução é uma sessão nova e curta que lê o `estado.json` e retoma ou termina em uma linha.
 4. **Validador antes de qualquer modelo olhar.** `validar_pauta.py` reprova JSON inválido, contagem errada, texto longo e palavra proibida. O Sonnet só recebe pauta válida; o conferente só recebe stills de pauta válida.
 5. **Kits e pautas em git, não no PC.** Hoje a sessão depende do computador do Felipe estar ligado e de `device_stage_files`. Com o kit em repositório, a sessão clona e trabalha sozinha. O Drive fica só para a saída final.

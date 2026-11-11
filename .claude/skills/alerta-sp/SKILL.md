@@ -19,9 +19,9 @@ O processo detalhado ainda mora no PC: `C:\AlertaSP\ROTINA.md` (o QUANDO e o QUE
    {"id": "<AAAA-MM-DD>_partN_<nome>", "part": "partN", "steps": [{"do": "voice"}, {"do": "stills", "at": [...], "out": "stills"}, {"do": "sound"}, {"do": "render"}, {"do": "encode"}, {"do": "cover"}, {"do": "fotos"}, {"do": "deliver"}, {"do": "clean"}]}
    ```
    `{"do":"voice","engine":"kokoro"}` força a voz de reserva. As etapas rodam em ordem e param na primeira que falhar.
-3. Resultado em `C:\AlertaSP\_fila\feitos\<id>.result.json` (log em `<id>.log`). Leia sempre a saída. Cheque a cada 1 a 3 min; espera longa: `send_later` de 10 min (único caso em que ele é permitido, porque o processo roda no PC).
+3. Resultado em `C:\AlertaSP\_fila\feitos\<id>.result.json` (log em `<id>.log`). Leia sempre a saída. Cheque a cada 1 a 3 min; espera longa: `send_later` de 10 min. Este canal ainda não foi migrado para horários fixos porque o processo roda no PC; `send_later` é permitido aqui.
 
 ## Etapas
 - **A (17:47)**: briefing com o Felipe (votação, comentários, rumo da história, pedidos para as fotos); espera de até 2 h; `story.md`, `lines.json` (uma voz por personagem do `vozes.json`), `fotos.md`; `estado.json` `roteiro: pronto`; resumo curto.
-- **B (02:30)**: portões (Chefão terminou, roteiro pronto, Iniciador vivo); voz, `film.html`, stills, som, render, encode, capa, fotos, entrega; mensagem final com vídeo, capa, 5 fotos, kit de post e legendas das fotos.
+- **B (02:30, via `send_later` da etapa A)**: portões (Chefão terminou, roteiro pronto, Iniciador vivo). Portão fechado: `send_later` de 60 min, no máximo até 06:00; depois disso produza sem esperar o Chefão e avise. Então voz, `film.html`, stills, som, render, encode, capa, fotos, entrega; mensagem final com vídeo, capa, 5 fotos, kit de post e legendas das fotos.
 Se algo der errado e não resolver: diga em qual etapa parou e o que falta.

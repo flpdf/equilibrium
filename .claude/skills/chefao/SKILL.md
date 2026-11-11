@@ -17,7 +17,7 @@ Por dia: 3 vídeos (37 s, 1080×1920, narrados) e 3 carrosséis (5 imagens 1080�
 
 ## Portões
 `estado.json` = `{"pauta": proposta|em_ajuste|aprovada|padrao, "audio": pendente|em_andamento|pronto|pronto_com_avisos|falhou, "producao": pendente|em_andamento|produzida}`. Cada etapa grava só o seu campo, depois de trazer a versão atual.
-- ÁUDIO começa se a pauta existe com os 3 `narration.json` e `pauta` ≠ `em_ajuste`. Prazo 00:30.
+- ÁUDIO começa se a pauta existe com os 3 `narration.json` e `pauta` ≠ `em_ajuste`. A execução das 23:07 usa o motor principal; a das 00:07 não espera: vídeo ainda sem narração vai direto para a reserva.
 - PRODUÇÃO de vídeos começa se `audio` ∈ {pronto, pronto_com_avisos}. Carrosséis não dependem de áudio. Prazo 05:15: depois, renderize sem narração o que não tiver `audio.json` e avise.
 - Portão fechado: encerre o turno. A tarefa agendada roda de novo no próximo horário fixo e retoma de onde parou. Não use `send_later` na mesma sessão.
 
@@ -41,7 +41,7 @@ Por dia: 3 vídeos (37 s, 1080×1920, narrados) e 3 carrosséis (5 imagens 1080�
 Regra do Felipe (06/11): a narração tem que soar brasileira nativa. Nunca use voz desenhada do Voice Studio.
 1. Portão. `pauta` = `proposta` → grave `padrao`. Grave `audio: em_andamento`. Traga `audio_falas.py`.
 2. Para cada vídeo sem `audio.json`, gere as 10 falas separadas (`reference/narracao.md`: motor principal Voice Studio por fila, reserva ElevenLabs). Arquivos em `run/vN/falas/01..10.mp3`.
-3. `python3 scripts/checar_audio.py run/vN/falas run/vN/narration.json --saida run/vN/falas/qa.json`. Refaça só as falas REFAZER, mesmos parâmetros, até 2 refações por fala. Depois disso, fique com a melhor e registre o aviso.
+3. `python3 scripts/checar_audio.py run/vN/falas run/vN/narration.json --saida run/vN/falas/qa.json`. Refaça só as falas REFAZER (inclui arquivo ausente ou inválido), mesmos parâmetros, até 2 refações por fala. Depois disso, fique com a melhor e registre o aviso.
 4. `python3 audio_falas.py montar run/vN/falas run/vN/narration.json run/vN/narracao_sync.wav`.
 5. Grave em `pautas\<amanhã>\vN\`: `narracao_sync.wav`, `falas\`, `audio.json` = `{"motor": "...", "voz": "...", "creditos": N, "refeitas": [...], "avisos": [...]}`.
 6. Grave `audio: pronto` (ou `pronto_com_avisos`; `falhou` se nenhum vídeo tem narração). Mensagem final: por vídeo, OK, falas refeitas, avisos, motor e voz.
