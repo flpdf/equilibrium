@@ -1,0 +1,76 @@
+{
+  "id": "c1",
+  "cor": "r",
+  "titulo": [
+    "ERROS NO",
+    [
+      "AGACHAMENTO",
+      "r"
+    ]
+  ],
+  "slides": [
+    {
+      "tipo": "erro",
+      "kicker": "ERRO 1",
+      "nome": "JOELHO",
+      "anim": "squat.fbx",
+      "errado": "Joelho fecha para dentro",
+      "certo": "Joelho na direção do pé",
+      "erro": {
+        "view": "front",
+        "zone": "Hips",
+        "deform": {
+          "bone": "LeftUpLeg",
+          "axis": "z",
+          "angle": 15
+        }
+      }
+    },
+    {
+      "tipo": "erro",
+      "kicker": "ERRO 2",
+      "nome": "CALCANHAR",
+      "anim": "squat.fbx",
+      "errado": "Calcanhar sai do chão",
+      "certo": "Pé inteiro apoiado",
+      "erro": {
+        "view": "side",
+        "zone": "Foot",
+        "deform": {
+          "bone": "LeftFoot",
+          "axis": "x",
+          "angle": -20
+        }
+      }
+    },
+    {
+      "tipo": "erro",
+      "kicker": "ERRO 3",
+      "nome": "COSTAS",
+      "anim": "squat.fbx",
+      "errado": "Costas curvadas",
+      "certo": "Coluna neutra",
+      "erro": {
+        "view": "side_left",
+        "zone": "Spine",
+        "deform": {
+          "bone": "Spine1",
+          "axis": "x",
+          "angle": 25
+        }
+      }
+    },
+    {
+      "tipo": "info",
+      "tag": "DICA",
+      "titulo": [
+        "PEITO ABERTO",
+        "OLHAR À FRENTE"
+      ],
+      "anim": "squat.fbx",
+      "view": "front",
+      "texto": "Mantenha o peito aberto e o olhar à frente durante todo o movimento. Isso ajuda a manter a postura.",
+      "tagcor": "g"
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "captions": [
+    [
+      [
+        "AGACHAMENTO",
+        ""
+      ]
+    ],
+    [
+      [
+        "3 ERROS",
+        "r"
+      ]
+    ],
+    [
+      [
+        "QUE TRAVAM",
+        "r"
+      ],
+      [
+        "VOCÊ",
+        ""
+      ]
+    ],
+    [
+      [
+        "ERRO UM",
+        ""
+      ]
+    ],
+    [
+      [
+        "JOELHO PRA DENTRO",
+        "r"
+      ]
+    ],
+    [
+      [
+        "ERRO DOIS",
+        ""
+      ]
+    ],
+    [
+      [
+        "CALCANHAR NO AR",
+        "r"
+      ]
+    ],
+    [
+      [
+        "ERRO TRÊS",
+        ""
+      ]
+    ],
+    [
+      [
+        "COSTAS CURVADAS",
+        "r"
+      ]
+    ],
+    [
+      [
+        "CORRIGIDO",
+        "g"
+      ]
+    ],
+    [
+      [
+        "SEGUE O CHEFÃO",
+        "g"
+      ]
+    ]
+  ],
+  "errors": [
+    {
+      "label": "JOELHO PRA DENTRO",
+      "check": "JOELHO ALINHADO",
+      "view": "front",
+      "zone": "Hips",
+      "deform": {
+        "bone": "LeftUpLeg",
+        "axis": "z",
+        "angle": 15
+      }
+    },
+    {
+      "label": "CALCANHAR NO AR",
+      "check": "PÉ NO CHÃO",
+      "view": "side",
+      "zone": "Foot",
+      "deform": [
+        {
+          "bone": "LeftFoot",
+          "axis": "x",
+          "angle": -20
+        },
+        {
+          "bone": "RightFoot",
+          "axis": "x",
+          "angle": -20
+        }
+      ]
+    },
+    {
+      "label": "COSTAS CURVADAS",
+      "check": "COLUNA NEUTRA",
+      "view": "side_left",
+      "zone": "Spine",
+      "deform": {
+        "bone": "Spine1",
+        "axis": "x",
+        "angle": 25
+      }
+    }
+  ],
+  "card": {
+    "name": [
+      "AGACHAMENTO"
+    ],
+    "rows": [
+      "PERNAS",
+      "GLÚTEOS",
+      "CORE"
+    ]
+  },
+  "outro": {
+    "percent": 50
+  },
+  "cta": {
+    "cards": [
+      "SEGUIR",
+      "SALVAR",
+      "COMPARTILHAR"
+    ]
+  }
+}

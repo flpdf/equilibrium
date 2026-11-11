@@ -1,0 +1,136 @@
+{
+  "captions": [
+    [
+      [
+        "PRANCHA",
+        ""
+      ]
+    ],
+    [
+      [
+        "3 ERROS",
+        "r"
+      ]
+    ],
+    [
+      [
+        "QUE ANULAM",
+        "r"
+      ],
+      [
+        "O CORE",
+        ""
+      ]
+    ],
+    [
+      [
+        "ERRO UM",
+        ""
+      ]
+    ],
+    [
+      [
+        "QUADRIL ALTO",
+        "r"
+      ]
+    ],
+    [
+      [
+        "ERRO DOIS",
+        ""
+      ]
+    ],
+    [
+      [
+        "OMBROS AFUNDADOS",
+        "r"
+      ]
+    ],
+    [
+      [
+        "ERRO TRÊS",
+        ""
+      ]
+    ],
+    [
+      [
+        "OLHAR PRA FRENTE",
+        "r"
+      ]
+    ],
+    [
+      [
+        "CORRIGIDO",
+        "g"
+      ]
+    ],
+    [
+      [
+        "SEGUE O CHEFÃO",
+        "g"
+      ]
+    ]
+  ],
+  "errors": [
+    {
+      "label": "QUADRIL ALTO",
+      "check": "CORPO EM LINHA",
+      "view": "side",
+      "zone": "Hips",
+      "deform": {
+        "bone": "Hips",
+        "axis": "x",
+        "angle": 25
+      }
+    },
+    {
+      "label": "OMBROS AFUNDADOS",
+      "check": "EMPURRE O CHÃO",
+      "view": "low_side",
+      "zone": "Shoulder",
+      "deform": [
+        {
+          "bone": "LeftShoulder",
+          "axis": "y",
+          "angle": 10
+        },
+        {
+          "bone": "RightShoulder",
+          "axis": "y",
+          "angle": -10
+        }
+      ]
+    },
+    {
+      "label": "OLHAR PRA FRENTE",
+      "check": "OLHAR PRA BAIXO",
+      "view": "front_low",
+      "zone": "Neck",
+      "deform": {
+        "bone": "Head",
+        "axis": "x",
+        "angle": -20
+      }
+    }
+  ],
+  "card": {
+    "name": [
+      "PRANCHA"
+    ],
+    "rows": [
+      "CORE",
+      "OMBROS",
+      "GLÚTEOS"
+    ]
+  },
+  "outro": {
+    "percent": 50
+  },
+  "cta": {
+    "cards": [
+      "SEGUIR",
+      "SALVAR",
+      "COMPARTILHAR"
+    ]
+  }
+}

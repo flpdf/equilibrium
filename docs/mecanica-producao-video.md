@@ -37,7 +37,7 @@ Em resumo: o Opus foi usado como operador de linha de montagem. Ele deveria ser 
 | Correção de deform ou vista | Ajustar parâmetros do `episode.json` | Julgamento técnico | `conferente` até 2 rodadas; depois escala | Sonnet, escala para Opus |
 | Render, montagem, loudnorm, capa | ffmpeg e render.js | Mecânico | script `producao.py` | nenhum |
 | Entrega no Drive, histórico, mensagem | Copiar, CSV, resumo | Mecânico | script + Haiku para a mensagem | Haiku |
-| Portões entre etapas | "Está pronto?" | Determinístico | sessão nova e curta, sem contexto acumulado | Haiku |
+| Portões entre etapas | "Está pronto?" | Determinístico | a mesma tarefa agendada, em horários fixos, sessão nova e curta | o da etapa |
 
 Resultado esperado: Opus some do dia a dia. Sonnet escreve e olha. Haiku opera. Scripts fazem o resto.
 
@@ -45,7 +45,7 @@ Resultado esperado: Opus some do dia a dia. Sonnet escreve e olha. Haiku opera. 
 
 1. **Modelo por tarefa agendada.** Cada tarefa agendada (PAUTA, ÁUDIO, PRODUÇÃO) passa a nascer com o modelo da etapa, não com o da conta. É a maior alavanca e não exige mudar nenhum script.
 2. **Skill curta, referência em arquivos.** A skill vira uma página: qual etapa, qual script rodar, o que fazer com a saída. Tabelas de deform, esquemas de JSON e regras de conteúdo vão para `docs/` e `exemplos/` e entram no contexto só quando o passo precisa.
-3. **Portões sem acumular contexto.** Em vez de `send_later` na mesma sessão, a etapa termina e uma tarefa agendada curta em Haiku checa o `estado.json` em horários fixos. Se o portão abre, ela dispara a etapa seguinte.
+3. **Portões sem acumular contexto.** Em vez de `send_later` na mesma sessão, a etapa termina quando o portão está fechado, e a própria tarefa agendada roda de novo em horários fixos (ex.: áudio às 23:07 e 00:07; produção às 01:07, 03:07 e 05:07). Cada execução é uma sessão nova e curta que lê o `estado.json` e retoma ou termina em uma linha.
 4. **Validador antes de qualquer modelo olhar.** `validar_pauta.py` reprova JSON inválido, contagem errada, texto longo e palavra proibida. O Sonnet só recebe pauta válida; o conferente só recebe stills de pauta válida.
 5. **Kits e pautas em git, não no PC.** Hoje a sessão depende do computador do Felipe estar ligado e de `device_stage_files`. Com o kit em repositório, a sessão clona e trabalha sozinha. O Drive fica só para a saída final.
 6. **Áudio sem navegador.** Dois caminhos: (a) `edge-tts`, gratuito e local, com voz pt-BR, elimina créditos e o download via navegador; (b) manter ElevenLabs, mas operado por Haiku. Vale testar (a) em um vídeo e comparar a voz.
@@ -87,7 +87,7 @@ npm install -g hyperframes
 - **Este repositório (`equilibrium`)**: a linha de produção compartilhada. Agentes, scripts genéricos (validar, gerar áudio, transcrever, montar, entregar), documentação e o script de setup.
 - **Um repositório por canal** (`chefao-academia`, `se-acontecesse`, `videos-ia`): o kit do motor, os moldes, o catálogo, as pautas do dia e a skill curta daquele canal. Cada um depende deste.
 
-## 7. Próximos passos, em ordem
+## 7. Próximos passos, em ordem (1, 2, 4 e 7 feitos em 11/11)
 
 1. Trocar o modelo das tarefas agendadas existentes para Sonnet. Ganho imediato, sem mexer em script.
 2. Escrever `validar_pauta.py` e `checar_audio.py` (whisper) aqui, com testes.

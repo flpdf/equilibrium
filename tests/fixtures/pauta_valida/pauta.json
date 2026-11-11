@@ -1,0 +1,88 @@
+{
+  "data": "2026-11-12",
+  "dia": "quinta",
+  "tema": "Corpo todo sem equipamento",
+  "status": "aprovada",
+  "videos": [
+    {
+      "id": "v1",
+      "slot": "manha",
+      "postar": "07:00",
+      "nivel": "iniciante",
+      "exercicio": "Agachamento",
+      "arquivo": "squat.fbx",
+      "pasta": "v1",
+      "erros": [
+        "Joelho para dentro",
+        "Calcanhar fora do chão",
+        "Costas curvadas"
+      ],
+      "gancho": "Seu agachamento está sabotando você"
+    },
+    {
+      "id": "v2",
+      "slot": "almoco",
+      "postar": "12:30",
+      "nivel": "intermediario",
+      "exercicio": "Flexão",
+      "arquivo": "pushup.fbx",
+      "pasta": "v2",
+      "erros": [
+        "Quadril caindo",
+        "Cotovelo aberto demais",
+        "Pescoço projetado"
+      ],
+      "gancho": "Sua flexão está errada e você nem sabe"
+    },
+    {
+      "id": "v3",
+      "slot": "noite",
+      "postar": "19:00",
+      "nivel": "iniciante",
+      "exercicio": "Prancha",
+      "arquivo": "plank.fbx",
+      "pasta": "v3",
+      "erros": [
+        "Quadril alto demais",
+        "Ombros afundados",
+        "Olhar para frente"
+      ],
+      "gancho": "Prancha errada não fortalece nada"
+    }
+  ],
+  "carrosseis": [
+    {
+      "id": "c1",
+      "postar": "09:00",
+      "tipo": "erros",
+      "titulo": "Erros no agachamento",
+      "itens": [
+        "Joelho",
+        "Calcanhar",
+        "Costas"
+      ]
+    },
+    {
+      "id": "c2",
+      "postar": "15:00",
+      "tipo": "erros",
+      "titulo": "Erros na flexão",
+      "itens": [
+        "Quadril",
+        "Cotovelo",
+        "Pescoço"
+      ]
+    },
+    {
+      "id": "c3",
+      "postar": "21:00",
+      "tipo": "dicas",
+      "titulo": "Dicas de postura",
+      "itens": [
+        "Respiração",
+        "Olhar",
+        "Core"
+      ]
+    }
+  ]
+}

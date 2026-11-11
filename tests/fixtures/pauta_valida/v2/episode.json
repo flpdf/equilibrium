@@ -1,0 +1,136 @@
+{
+  "captions": [
+    [
+      [
+        "FLEXÃO",
+        ""
+      ]
+    ],
+    [
+      [
+        "3 ERROS",
+        "r"
+      ]
+    ],
+    [
+      [
+        "QUE ROUBAM",
+        "r"
+      ],
+      [
+        "FORÇA",
+        ""
+      ]
+    ],
+    [
+      [
+        "ERRO UM",
+        ""
+      ]
+    ],
+    [
+      [
+        "QUADRIL CAINDO",
+        "r"
+      ]
+    ],
+    [
+      [
+        "ERRO DOIS",
+        ""
+      ]
+    ],
+    [
+      [
+        "COTOVELO ABERTO",
+        "r"
+      ]
+    ],
+    [
+      [
+        "ERRO TRÊS",
+        ""
+      ]
+    ],
+    [
+      [
+        "PESCOÇO À FRENTE",
+        "r"
+      ]
+    ],
+    [
+      [
+        "CORRIGIDO",
+        "g"
+      ]
+    ],
+    [
+      [
+        "SEGUE O CHEFÃO",
+        "g"
+      ]
+    ]
+  ],
+  "errors": [
+    {
+      "label": "QUADRIL CAINDO",
+      "check": "CORPO EM LINHA",
+      "view": "side",
+      "zone": "Hips",
+      "deform": {
+        "bone": "Hips",
+        "axis": "x",
+        "angle": -18
+      }
+    },
+    {
+      "label": "COTOVELO ABERTO",
+      "check": "COTOVELO COLADO",
+      "view": "top_front",
+      "zone": "Arm",
+      "deform": [
+        {
+          "bone": "LeftArm",
+          "axis": "z",
+          "angle": 30
+        },
+        {
+          "bone": "RightArm",
+          "axis": "z",
+          "angle": -30
+        }
+      ]
+    },
+    {
+      "label": "PESCOÇO À FRENTE",
+      "check": "OLHAR NO CHÃO",
+      "view": "threequarter",
+      "zone": "Neck",
+      "deform": {
+        "bone": "Neck",
+        "axis": "x",
+        "angle": 20
+      }
+    }
+  ],
+  "card": {
+    "name": [
+      "FLEXÃO"
+    ],
+    "rows": [
+      "PEITO",
+      "OMBROS",
+      "TRÍCEPS"
+    ]
+  },
+  "outro": {
+    "percent": 50
+  },
+  "cta": {
+    "cards": [
+      "SEGUIR",
+      "SALVAR",
+      "COMPARTILHAR"
+    ]
+  }
+}
