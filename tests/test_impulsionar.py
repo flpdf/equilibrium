@@ -204,7 +204,8 @@ def test_meta_ids_por_canal(sem_rede, capsys):
     cfg = json.loads((RAIZ / "config" / "ads.json").read_text(encoding="utf-8"))
     meta.criar(DEC, "seguidores", AGORA, confirmar=False, config=cfg)
     out = capsys.readouterr().out
-    assert '"instagram_user_id": "17841472492442815"' in out and '"page_id": "1506404455885952"' in out
+    assert '"instagram_user_id": "17841472492442815"' in out and '"object_id": "1506404455885952"' in out
+    assert "object_story_spec" not in out
     contas = {c: meta.contas_do_canal({"canal": c}, cfg, exigir=True)["ig_user_id"]
               for c in ("chefao", "se-acontecesse", "alerta-sp")}
     assert contas == {"chefao": "17841472492442815", "se-acontecesse": "17841453394645080",

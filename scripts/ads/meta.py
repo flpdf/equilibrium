@@ -83,10 +83,10 @@ def payload_criativo(d: dict[str, Any], contas: dict[str, str]) -> dict[str, Any
     midia = d.get("extra", {}).get("midia_id") or "<midia_id do reel>"
     return {
         "name": _nome(d),
-        "object_story_spec": {
-            "page_id": contas["page_id"],
-            "instagram_user_id": contas["ig_user_id"],
-        },
+        # Post existente: object_id + instagram_user_id + source_instagram_media_id.
+        # Com object_story_spec junto a Meta recusa (erro 1487929, objeto ambíguo).
+        "object_id": contas["page_id"],
+        "instagram_user_id": contas["ig_user_id"],
         "source_instagram_media_id": midia,
     }
 
