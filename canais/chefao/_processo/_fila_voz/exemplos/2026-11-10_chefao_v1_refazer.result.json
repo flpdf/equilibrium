@@ -1,0 +1,8 @@
+{
+ "id": "2026-11-10_chefao_v1_refazer",
+ "inicio": "2026-11-09T23:32:27",
+ "ok": true,
+ "codigo": 0,
+ "saida": "fala 01: pronta (cache)\nfala 02 versao 1: nota 0.71, 2.68s  | ouvido: Agora é onde todo boxe começa, três fades.\nfala 03 versao 1: nota 0.57, 1.63s  | ouvido: Errum, mãos baixas.\nfala 03 versao 2: nota 0.75, 1.64s  | ouvido: Erro 1, mãos baixas.\nfala 04: pronta (cache)\nfala 05 versao 1: nota 0.5, 1.63s  | ouvido: Erro 2, queijo alto.\nfala 05 versao 2: nota 0.75, 1.71s  | ouvido: Erro 2, queixo alto.\nfala 06: pronta (cache)\nfala 07 versao 1: nota 0.4, 1.68s  | ouvido: Erro 3, quanto vê nos abertos.\nfala 07 versao 2: nota 0.2, 1.9s  | ouvido: e o R3, cotovê nos abertos.\nAVISO fala 07: melhor versao com nota 0.4\nfala 08: pronta (cache)\nfala 09 versao 1: nota 0.33, 1.84s  | ouvido: Pronto, guarda-t-se bloqueado!\nfala 09 versao 2: nota 0.33, 1.85s  | ouvido: Pronto, guarda-des bloquiada.\nAVISO fala 09: melhor versao com nota 0.33\nfala 10: pronta (cache)\nfalas prontas: 10/10\n",
+ "fim": "2026-11-09T23:37:12"
+}

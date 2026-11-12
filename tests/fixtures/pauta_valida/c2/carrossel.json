@@ -1,0 +1,79 @@
+{
+  "id": "c2",
+  "cor": "y",
+  "titulo": [
+    "ERROS NA",
+    "FLEXÃO"
+  ],
+  "slides": [
+    {
+      "tipo": "erro",
+      "kicker": "ERRO 1",
+      "nome": "QUADRIL",
+      "anim": "pushup.fbx",
+      "errado": "Quadril cai no meio",
+      "certo": "Corpo em linha reta",
+      "erro": {
+        "view": "side",
+        "zone": "Hips",
+        "deform": {
+          "bone": "Hips",
+          "axis": "x",
+          "angle": -0.31
+        }
+      }
+    },
+    {
+      "tipo": "erro",
+      "kicker": "ERRO 2",
+      "nome": "COTOVELO",
+      "anim": "pushup.fbx",
+      "errado": "Cotovelo muito aberto",
+      "certo": "Cotovelo perto do corpo",
+      "erro": {
+        "view": "top_front",
+        "zone": "Arm",
+        "deform": [
+          {
+            "bone": "LeftArm",
+            "axis": "z",
+            "angle": 0.5
+          },
+          {
+            "bone": "RightArm",
+            "axis": "z",
+            "angle": -0.5
+          }
+        ]
+      }
+    },
+    {
+      "tipo": "erro",
+      "kicker": "ERRO 3",
+      "nome": "PESCOÇO",
+      "anim": "pushup.fbx",
+      "errado": "Pescoço vai para frente",
+      "certo": "Olhar para o chão",
+      "erro": {
+        "view": "threequarter",
+        "zone": "Neck",
+        "deform": {
+          "bone": "Neck",
+          "axis": "x",
+          "angle": 0.35
+        }
+      }
+    },
+    {
+      "tipo": "info",
+      "tag": "DICA",
+      "titulo": [
+        "CORE ATIVO"
+      ],
+      "anim": "pushup.fbx",
+      "view": "side",
+      "texto": "Contraia o abdômen antes de descer. O corpo inteiro desce junto, como uma tábua.",
+      "tagcor": "g"
+    }
+  ]
+}

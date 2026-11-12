@@ -1,0 +1,27 @@
+{
+ "anim": "Treadmill Running.fbx",
+ "peak": {
+  "bone": "LeftFoot",
+  "metric": "maxY"
+ },
+ "props": [
+  {
+   "file": "esteira.glb",
+   "fit": {
+    "axis": "y",
+    "cm": 150
+   },
+   "pos": [
+    0,
+    0,
+    18
+   ],
+   "rotY": 90
+  }
+ ],
+ "modelOffset": [
+  0,
+  9,
+  0
+ ]
+}

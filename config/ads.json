@@ -1,0 +1,26 @@
+{
+  "moeda": "BRL",
+  "orcamento_diario_total": 30.0,
+  "orcamento_semanal_total": 150.0,
+  "orcamento_por_post": {"min": 10.0, "max": 40.0},
+  "duracao_dias": 2,
+  "max_posts_por_dia": 2,
+  "janela_horas": 24,
+  "criterios": {
+    "views_min": 1000,
+    "taxa_engajamento_min": 0.04,
+    "percentil_views_canal": 0.8,
+    "retencao_min": null
+  },
+  "plataformas": {
+    "instagram": {"ativo": true, "objetivo": "seguidores"},
+    "tiktok": {"ativo": true, "objetivo": "visualizacoes"}
+  },
+  "canais": {
+    "chefao": {"ativo": true, "peso": 1.0},
+    "se-acontecesse": {"ativo": true, "peso": 1.0},
+    "alerta-sp": {"ativo": false, "peso": 0.5}
+  },
+  "nunca_impulsionar": ["venda", "suplemento"],
+  "parar_se": {"cpm_max": 15.0, "custo_por_seguidor_max": 1.0}
+}

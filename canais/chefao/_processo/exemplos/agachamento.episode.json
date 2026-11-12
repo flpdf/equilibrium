@@ -1,0 +1,26 @@
+{
+ "id":"exemplo_agachamento",
+ "anim":"Air Squat.fbx",
+ "peak":{"bone":"Hips","metric":"minY"},
+ "watermark":"AGACHAMENTO",
+ "topbar":{"left":"VOCÊ · \"SÓ UMA SÉRIE\"","right":"CHEFÃO DA PERNA"},
+ "card":{"name":["AGACHAMENTO","LIVRE"],"rows":[["MÚSCULOS","QUAD · GLÚTEO"],["NÍVEL","★★☆☆☆"],["RISCO","JOELHO · LOMBAR","r"]]},
+ "captions":[
+  [["VOCÊ",""],["AGACHA",""]],[["DO",""],["JEITO","r"],["CERTO?","r"]],
+  [["O",""],["BÁSICO",""]],[["QUE",""],["TODO",""],["MUNDO",""],["ERRA","r"]],
+  [["ERRO 1:",""],["JOELHO","r"],["PRA DENTRO","r"]],[["EMPURRE",""],["OS JOELHOS",""],["PRA FORA","g"]],
+  [["ERRO 2:",""],["CALCANHAR","r"],["SUBINDO","r"]],[["PESO",""],["NO MEIO","g"],["DO PÉ","g"]],
+  [["ERRO 3:",""],["COLUNA","r"],["ARREDONDADA","r"]],[["PEITO","g"],["ABERTO,",""],["COLUNA","g"],["NEUTRA","g"]],
+  [["AGACHAMENTO",""],["DESBLOQUEADO","g"]]
+ ],
+ "errors":[
+  {"label":"JOELHO PRA DENTRO","check":"JOELHOS PARA FORA","view":"front","zone":["LeftLeg","RightLeg"],"arrows":"out",
+   "deform":[{"bone":"LeftUpLeg","axis":"z","angle":-0.17,"mirror":true},{"bone":"LeftUpLeg","axis":"y","angle":0.22,"mirror":true},{"bone":"LeftLeg","axis":"z","angle":0.16,"mirror":true}]},
+  {"label":"CALCANHAR SUBINDO","check":"CALCANHAR NO CHÃO","view":"side","zone":["LeftFoot","RightFoot"],"lift":9,
+   "deform":[{"bone":"LeftFoot","axis":"x","angle":-0.55},{"bone":"RightFoot","axis":"x","angle":-0.55},{"bone":"LeftToeBase","axis":"x","angle":0.44},{"bone":"RightToeBase","axis":"x","angle":0.44},{"bone":"LeftLeg","axis":"x","angle":0.18},{"bone":"RightLeg","axis":"x","angle":0.18}]},
+  {"label":"COLUNA ARREDONDADA","check":"COLUNA NEUTRA","view":"side","zone":["Spine1"],
+   "deform":[{"bone":"Spine","axis":"x","angle":0.26},{"bone":"Spine1","axis":"x","angle":0.26},{"bone":"Spine2","axis":"x","angle":0.26},{"bone":"Neck","axis":"x","angle":-0.25},{"bone":"Hips","axis":"x","angle":-0.15}]}
+ ],
+ "outro":{"next":"LEVANTAMENTO TERRA","percent":41},
+ "cta":{"cards":[["SUPINO","PEITO · ★★★☆☆"],["TERRA","POSTERIOR · ★★★★☆"],["BARRA\nFIXA","COSTAS · ★★★★☆"]]}
+}

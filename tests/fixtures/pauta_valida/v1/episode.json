@@ -1,0 +1,166 @@
+{
+  "anim": "squat.fbx",
+  "peak": {
+    "bone": "Hips",
+    "metric": "y"
+  },
+  "watermark": "@chefaodostreinos",
+  "topbar": {
+    "left": "VOCÊ · \"TÁ BOM ASSIM\"",
+    "right": "CHEFÃO DA PERNA"
+  },
+  "captions": [
+    [
+      [
+        "AGACHAMENTO",
+        ""
+      ]
+    ],
+    [
+      [
+        "3 ERROS",
+        "r"
+      ]
+    ],
+    [
+      [
+        "QUE TRAVAM",
+        "r"
+      ],
+      [
+        "VOCÊ",
+        ""
+      ]
+    ],
+    [
+      [
+        "ERRO UM",
+        ""
+      ]
+    ],
+    [
+      [
+        "JOELHO PRA DENTRO",
+        "r"
+      ]
+    ],
+    [
+      [
+        "ERRO DOIS",
+        ""
+      ]
+    ],
+    [
+      [
+        "CALCANHAR NO AR",
+        "r"
+      ]
+    ],
+    [
+      [
+        "ERRO TRÊS",
+        ""
+      ]
+    ],
+    [
+      [
+        "COSTAS CURVADAS",
+        "r"
+      ]
+    ],
+    [
+      [
+        "CORRIGIDO",
+        "g"
+      ]
+    ],
+    [
+      [
+        "SEGUE O CHEFÃO",
+        "g"
+      ]
+    ]
+  ],
+  "errors": [
+    {
+      "label": "JOELHO PRA DENTRO",
+      "check": "JOELHO ALINHADO",
+      "view": "front",
+      "zone": "Hips",
+      "deform": {
+        "bone": "LeftUpLeg",
+        "axis": "z",
+        "angle": 0.26
+      }
+    },
+    {
+      "label": "CALCANHAR NO AR",
+      "check": "PÉ NO CHÃO",
+      "view": "side",
+      "zone": "Foot",
+      "deform": [
+        {
+          "bone": "LeftFoot",
+          "axis": "x",
+          "angle": -0.35
+        },
+        {
+          "bone": "RightFoot",
+          "axis": "x",
+          "angle": -0.35
+        }
+      ]
+    },
+    {
+      "label": "COSTAS CURVADAS",
+      "check": "COLUNA NEUTRA",
+      "view": "side_left",
+      "zone": "Spine",
+      "deform": {
+        "bone": "Spine1",
+        "axis": "x",
+        "angle": 0.44
+      }
+    }
+  ],
+  "card": {
+    "name": [
+      "AGACHAMENTO"
+    ],
+    "rows": [
+      [
+        "MÚSCULOS",
+        "PERNAS"
+      ],
+      [
+        "NÍVEL",
+        "★☆☆"
+      ],
+      [
+        "RISCO",
+        "MÉDIO",
+        "r"
+      ]
+    ]
+  },
+  "outro": {
+    "percent": 50,
+    "next": "Flexão"
+  },
+  "cta": {
+    "cards": [
+      [
+        "PRANCHA",
+        "CORE · ★★☆☆☆"
+      ],
+      [
+        "FLEXÃO",
+        "PEITO · ★★★☆☆"
+      ],
+      [
+        "AFUNDO",
+        "PERNAS · ★★☆☆☆"
+      ]
+    ]
+  }
+}

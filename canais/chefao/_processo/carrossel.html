@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<!-- Slides de carrossel "Chefão" — lê <c>/carrossel.json e <c>/shots/. Não editar por carrossel. -->
+<style>
+@font-face{font-family:Bebas;src:url(node_modules/@fontsource/bebas-neue/files/bebas-neue-latin-400-normal.woff2)}
+@font-face{font-family:Mono;src:url(node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2);font-weight:400}
+@font-face{font-family:Mono;src:url(node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-700-normal.woff2);font-weight:700}
+:root{--red:#ff3b47;--green:#3dff8a;--yellow:#ffc83d;--white:#f3f3f5;--bg:#0b0c0f;--acc:var(--red)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#16171c 0%,var(--bg) 70%);color:var(--white)}
+.r{color:var(--red)}.g{color:var(--green)}.y{color:var(--yellow)}
+.mono{font-family:Mono;letter-spacing:.32em;text-transform:uppercase}
+.bebas{font-family:Bebas;line-height:.9}
+#brand{position:absolute;top:92px;left:70px;font-size:26px;color:#c8cad0}#brand b{color:var(--red);font-weight:700}
+#pg{position:absolute;top:70px;right:70px;width:118px;height:74px;border:2px solid #3a3d45;transform:skewX(-10deg);display:grid;place-items:center;font-family:Bebas;font-size:52px}
+#main{position:absolute;top:150px;left:70px;right:70px;bottom:190px;display:flex;flex-direction:column}
+.title{text-align:center;font-size:104px;margin-bottom:46px}
+.hd{display:flex;align-items:center;gap:26px;margin-bottom:30px}
+.num{width:150px;height:150px;flex:none;background:var(--acc);transform:skewX(-8deg);display:grid;place-items:center;font-family:Bebas;font-size:140px;color:#fff;box-shadow:0 0 50px rgba(255,59,71,.45)}
+.kick{font-size:26px;color:#c8cad0;margin-bottom:10px}.nome{font-size:112px}
+.panel{position:relative;flex:1;border:3px solid var(--red);margin:0 20px 34px;background:var(--bg);overflow:hidden;min-height:0}
+.panel.ok{border-color:var(--green)}
+.panel img,.box img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.panel .tg{position:absolute;top:0;left:0;padding:10px 26px;background:var(--red);color:#fff;font-size:26px;font-weight:700;z-index:2}
+.panel.ok .tg{background:var(--green);color:#0b0c0f}
+.panel .lb{position:absolute;left:28px;right:28px;bottom:18px;font-family:Bebas;font-size:64px;color:var(--red);z-index:2;line-height:1;text-shadow:0 3px 0 rgba(0,0,0,.6)}
+.panel.ok .lb{color:var(--green)}
+.tagi{align-self:flex-start;background:var(--acc);color:#0b0c0f;font-size:24px;font-weight:700;padding:10px 26px;transform:skewX(-10deg);margin-bottom:18px;font-style:italic}
+.ititle{font-size:110px;margin-bottom:34px}
+.box{position:relative;flex:1;border:3px solid #33363e;margin:0 60px 40px;background:var(--bg);min-height:0}
+.txt{font-family:Mono;font-size:38px;line-height:1.38;color:#d6d8de}.txt b{color:#fff}
+#dots{position:absolute;bottom:136px;left:0;right:0;display:flex;justify-content:center;gap:12px}
+#dots i{width:48px;height:9px;background:#2c2f36;transform:skewX(-20deg)}#dots i.on{background:var(--acc)}
+#swipe{position:absolute;bottom:72px;left:0;right:0;text-align:center;font-size:26px;color:#c8cad0}#swipe em{font-style:normal;color:var(--acc)}
+/* CTA */
+#cta{position:absolute;top:220px;left:60px;right:60px;text-align:center}
+.halo{position:relative;width:560px;height:560px;margin:0 auto;border-radius:50%;overflow:hidden;background:radial-gradient(circle,rgba(61,255,138,.18),rgba(11,12,15,.9) 70%);box-shadow:0 0 90px rgba(61,255,138,.18)}
+.halo img{position:absolute;left:50%;top:70px;height:640px;width:auto;transform:translateX(-50%)}
+.panel img,.box img{inset:56px 20px 80px 20px;width:calc(100% - 40px);height:calc(100% - 136px)}
+.halo:after{content:"";position:absolute;inset:40px;border-radius:50%;border:6px dashed var(--red);opacity:.9}
+.cq{font-size:130px;margin-top:60px}.cs{font-size:100px;color:var(--green);margin-top:24px}
+.btn{margin:70px 30px 0;height:128px;border:4px solid var(--green);background:rgba(61,255,138,.1);transform:skewX(-8deg);display:flex;align-items:center;justify-content:center;gap:28px;font-size:34px;font-weight:700;font-style:italic}
+.btn .k{width:62px;height:62px;border:3px solid var(--green);display:grid;place-items:center;color:var(--green)}
+.foot{margin-top:70px;font-size:22px;color:#9a9ea8}
+</style></head><body>
+<div id="brand" class="mono"><b>CHEFÃO</b> DOS TREINOS</div><div id="pg"></div>
+<div id="main"></div><div id="dots"></div><div id="swipe" class="mono"></div>
+<script type="module">
+const q=new URLSearchParams(location.search), dir=q.get('c'), I=+q.get('i');
+const C=await (await fetch(`${dir}/carrossel.json?`+Date.now())).json();
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// linhas = [[["TEXTO","cor"],...], ...]  cor: "" | "r" | "g" | "y"
+const lines=L=>(L||[]).map(l=>(typeof l==='string'?[[l,'']]:l).map(([t,c])=>`<span class="${c||''}">${esc(t)}</span>`).join('')).join('<br>');
+const rich=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+const acc={r:'var(--red)',g:'var(--green)',y:'var(--yellow)'}[C.cor||'r']; document.documentElement.style.setProperty('--acc',acc);
+$('pg').textContent=`${I}/5`; $('dots').innerHTML=[1,2,3,4,5].map(k=>`<i class="${k===I?'on':''}"></i>`).join('');
+const m=$('main');
+if(I<=4){ const s=C.slides[I-1]; let h='';
+  if(I===1) h+=`<div class="bebas title">${lines(C.titulo)}</div>`;
+  if(s.tipo==='erro'){
+    h+=`<div class="hd"><div class="num">${I}</div><div><div class="kick mono">${esc(s.kicker||'')}</div><div class="bebas nome">${esc(s.nome)}</div></div></div>
+      <div class="panel"><img src="${dir}/shots/s${I}_errado.png"><div class="tg mono">✕ ERRADO</div><div class="lb">${esc(s.errado)}</div></div>
+      <div class="panel ok"><img src="${dir}/shots/s${I}_certo.png"><div class="tg mono">✓ CERTO</div><div class="lb">${esc(s.certo)}</div></div>`;
+  } else {
+    const tc={r:'var(--red)',g:'var(--green)',y:'var(--yellow)'}[s.tagcor||'']; h+=`<div class="tagi mono" ${tc?`style="background:${tc}"`:''}>◉ ${esc(s.tag||'')}</div><div class="bebas ititle">${lines(s.titulo)}</div>
+      <div class="box"><img src="${dir}/shots/s${I}.png"></div><div class="txt">${rich(s.texto||'')}</div>`;
+  }
+  m.innerHTML=h; $('swipe').innerHTML=`${esc(C.arrasta||'ARRASTA PRA PRÓXIMA')} <em>⟶</em>`;
+  if(I===1 && s.tipo!=='erro'){ m.querySelector('.ititle').style.fontSize='96px'; }
+} else { const c=C.cta||{};
+  m.style.display='none'; $('swipe').style.display='none'; $('dots').style.bottom='80px';
+  document.body.insertAdjacentHTML('beforeend',`<div id="cta"><div class="halo"><img src="${dir}/shots/s5.png"></div>
+    <div class="bebas cq">${lines(c.pergunta||[[['QUAL ',''],['CHEFÃO','r']],'VOCÊ QUER VER','AMANHÃ?'])}</div>
+    <div class="bebas cs">${esc(c.sub||'COMENTA AÍ')} ↓</div>
+    <div class="btn mono"><div class="k">+</div>${esc(c.botao||'SEGUE P/ DESBLOQUEAR')}</div>
+    <div class="foot mono">${esc(c.rodape||'NOVO CHEFÃO TODO DIA · VÍDEOS NO PERFIL')}</div></div>`);
+}
+await document.fonts.ready; await Promise.all([...document.images].map(i=>i.decode().catch(()=>{})));
+// avisa texto que estourou a largura/altura
+const over=[]; for(const el of document.querySelectorAll('.title,.nome,.ititle,.lb,.txt,.cq')){ if(el.scrollWidth>el.clientWidth+2) over.push(el.className); }
+if(m.scrollHeight>m.clientHeight+2) over.push('altura do slide');
+window.OVERFLOW=over; window.READY=true;
+</script></body></html>

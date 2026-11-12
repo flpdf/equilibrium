@@ -1,0 +1,38 @@
+{
+ "_leia": "Grade da temporada do Chefão dos Treinos. Cada dia da semana tem UM tema; os 3 vídeos do dia seguem a trilha base -> intermediário -> avançado (manhã, almoço, noite) e os 3 carrosséis fecham o mesmo tema. O Felipe pode mudar este arquivo à vontade.",
+ "horarios": {
+  "videos": {"manha": "07:00", "almoco": "12:30", "noite": "19:30"},
+  "carrosseis": {"c1": "09:30", "c2": "15:30", "c3": "21:30"}
+ },
+ "dias": {
+  "seg": {"tema": "DIA DE PERNA", "grupos": ["inferiores"]},
+  "ter": {"tema": "DIA DE BOXE", "grupos": ["lutas"], "pasta": "Boxe"},
+  "qua": {"tema": "DIA DE PEITO E BRAÇO", "grupos": ["superiores"]},
+  "qui": {"tema": "DIA DE CAPOEIRA", "grupos": ["lutas"], "pasta": "Capoeira"},
+  "sex": {"tema": "DIA DE CORE", "grupos": ["core"]},
+  "sab": {"tema": "DIA DE CARDIO", "grupos": ["cardio_maquinas", "cardio"]},
+  "dom": {"tema": "DIA DE CORPO INTEIRO", "grupos": ["corpo_inteiro", "cardio"]}
+ },
+ "trilha": {
+  "_leia": "Ordem de dificuldade dentro de cada tema (base primeiro). Manhã = mais básico ainda não usado recentemente; noite = o mais desafiador do dia. Exercício avançado só à noite e com foco em controle.",
+  "inferiores": ["Agachamento livre", "Agachamento com braços flexionados", "Agachamento com barra (back squat)", "Salto na caixa", "Agachamento overhead", "Agachamento unilateral (pistol)"],
+  "superiores": ["Flexão de braço", "Rosca bíceps", "Elevação frontal", "Flexão com salto"],
+  "core": ["Prancha", "Abdominal completo (sit-up)", "Abdominal bicicleta", "Abdominal circular", "Inchworm (caminhada em pike)"],
+  "Boxe": ["Guarda / base do boxe", "Jab", "Jab e direto", "Bloqueio alto", "Esquiva do boxe", "Gancho (mão da frente)", "Uppercut (mão da frente)", "Uppercut (mão de trás)", "Jab e direto no corpo", "Combinação de 4 golpes", "Saco de velocidade (speed bag)"],
+  "Capoeira": ["Ginga parada / base da capoeira", "Ginga (capoeira)", "Esquiva", "Benção (chute frontal)", "Meia-lua de frente", "Martelo", "Queixada", "Rasteira", "Armada (chute giratório)", "Meia-lua de compasso", "Aú (estrela)"],
+  "cardio_maquinas": ["Trote", "Corrida leve", "Corrida na esteira", "Bicicleta ergométrica", "Corrida moderada", "Corrida rápida", "Tiro (sprint)"],
+  "cardio": ["Polichinelo", "Pular corda", "Salto cruzado", "Salto cruzado com rotação", "Burpee"],
+  "corpo_inteiro": ["Swing com kettlebell", "Remada alta sumô", "Arremesso (clean and jerk)", "Arranco (snatch)"]
+ },
+ "carrosseis": {
+  "_leia": "Os 3 carrosséis do dia, sempre 5 imagens (4 itens + slide final de comentário). Tipos possíveis abaixo; a pauta escolhe 3 tipos diferentes por dia.",
+  "tipos": {
+   "erros": "4 erros do tema (pode reaproveitar os erros dos vídeos do dia + 1 inédito), slides tipo erro (errado x certo).",
+   "curiosidades": "4 curiosidades/fatos consagrados sobre o tema ou o corpo no treino, slides tipo info.",
+   "mito": "4 mitos x verdades do tema (título 'MITO:' ou 'VERDADE:'), slides tipo info.",
+   "treino": "4 exercícios do tema em sequência com a dica-chave de cada um (sem séries, cargas ou tempo), slides tipo info com o boneco no exercício.",
+   "cultura": "Só capoeira/boxe: história, nomes de golpes, regras de respeito no treino, slides tipo info."
+  }
+ },
+ "vendas": {"ativo": false, "_leia": "Vendas desligadas até o perfil aquecer (decisão do Felipe). Quando ligar, os produtos vêm de produtos.csv e só saem com aprovação explícita."}
+}

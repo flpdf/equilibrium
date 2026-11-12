@@ -1,0 +1,64 @@
+@font-face{font-family:'Newsreader';font-style:normal;font-weight:500;src:url(../node_modules/@fontsource/newsreader/files/newsreader-latin-500-normal.woff2) format('woff2');}
+@font-face{font-family:'Newsreader';font-style:italic;font-weight:400;src:url(../node_modules/@fontsource/newsreader/files/newsreader-latin-400-italic.woff2) format('woff2');}
+@font-face{font-family:'Newsreader';font-style:italic;font-weight:500;src:url(../node_modules/@fontsource/newsreader/files/newsreader-latin-500-italic.woff2) format('woff2');}
+@font-face{font-family:'Inter';font-weight:600;src:url(../node_modules/@fontsource/inter/files/inter-latin-600-normal.woff2) format('woff2');}
+@font-face{font-family:'Inter';font-weight:700;src:url(../node_modules/@fontsource/inter/files/inter-latin-700-normal.woff2) format('woff2');}
+html,body{margin:0;background:#05070a;width:1080px;height:1920px;overflow:hidden}
+#stage{position:absolute;inset:0} #stage canvas{display:block}
+#hud{position:absolute;inset:0;pointer-events:none;color:#fff;font-family:'Newsreader',serif}
+.sh{text-shadow:0 2px 14px rgba(0,0,0,.55),0 1px 3px rgba(0,0,0,.6)}
+/* estatística no topo */
+#stat{position:absolute;top:250px;left:0;right:0;text-align:center;opacity:0}
+#stat .num{font-weight:500;font-size:150px;line-height:1;color:#a9d3ff;letter-spacing:-1px}
+#stat .sub{font-family:'Inter';font-weight:700;font-size:25px;letter-spacing:.2em;margin-top:14px;text-transform:uppercase;padding:0 110px;line-height:1.45}
+/* relógio da simulação (esquerda) */
+#timer{position:absolute;left:46px;top:820px;opacity:0}
+#timer .lab{font-family:'Inter';font-weight:700;font-size:18px;letter-spacing:.22em;opacity:.9}
+#timer .val{font-size:86px;line-height:1;margin-top:4px}
+#timer .gauge{margin-top:34px;width:330px}
+#timer .bar{position:relative;height:9px;border-radius:5px;background:rgba(255,255,255,.22);overflow:visible}
+#timer .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:linear-gradient(90deg,#6fb3ff,#a9d3ff)}
+#timer .bar b{position:absolute;top:-6px;width:2px;height:21px;background:#ff6a5a}
+#timer .bar b::after{content:attr(data-l);position:absolute;top:-22px;left:-44px;width:120px;font:700 13px Inter;letter-spacing:.08em;color:#ffb3a8;white-space:nowrap}
+#timer .mm{font-family:'Inter';font-weight:700;font-size:22px;letter-spacing:.12em;margin-top:14px}
+#timer .mm span{color:#a9d3ff}
+/* legenda (frase) */
+#cap{position:absolute;left:80px;right:80px;top:1170px;text-align:center;font-style:italic;font-weight:400;font-size:47px;line-height:1.25;opacity:0}
+/* título do gancho */
+#title{position:absolute;left:70px;right:70px;top:300px;text-align:center;opacity:0}
+#title .q{font-weight:500;font-size:96px;line-height:1.05}
+#title .q em{font-style:italic;color:#a9d3ff}
+#title .brand{font-family:'Inter';font-weight:700;font-size:20px;letter-spacing:.32em;opacity:.85;margin-bottom:26px}
+/* flash */
+#flash{position:absolute;inset:0;background:#eef3ff;opacity:0;mix-blend-mode:screen}
+#fade{position:absolute;inset:0;background:#000;opacity:0}
+/* celular */
+#phone{position:absolute;left:50%;top:520px;width:560px;height:1080px;margin-left:-280px;opacity:0;perspective:1600px}
+#phone .dev{position:absolute;inset:0;border-radius:72px;background:#0d0f13;box-shadow:0 60px 120px rgba(0,0,0,.6),inset 0 0 0 3px #2b2f36;transform:rotateX(14deg) rotateZ(-4deg)}
+#phone .scr{position:absolute;inset:18px;border-radius:58px;overflow:hidden;background:linear-gradient(180deg,#1b2433,#0b0f16)}
+#phone .clock{position:absolute;top:110px;left:0;right:0;text-align:center;font:600 120px Inter;color:#e9eef6;letter-spacing:-3px}
+#phone .date{position:absolute;top:250px;left:0;right:0;text-align:center;font:600 30px Inter;color:#b9c3d2}
+#phone .alert{position:absolute;left:26px;right:26px;top:340px;border-radius:34px;background:rgba(245,247,250,.96);color:#111;padding:26px 28px;font-family:Inter;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+#phone .alert .h{display:flex;align-items:center;gap:14px;font:700 22px Inter;letter-spacing:.06em;color:#c0392b}
+#phone .alert .h i{display:inline-block;width:40px;height:40px;border-radius:10px;background:#e74c3c;color:#fff;font-style:normal;text-align:center;line-height:40px;font-size:28px}
+#phone .alert .t{font:700 34px Inter;margin-top:16px;line-height:1.15}
+#phone .alert .b{font:600 26px Inter;margin-top:12px;line-height:1.35;color:#333}
+#phone .stack{position:absolute;left:44px;right:44px;height:30px;border-radius:0 0 26px 26px;background:rgba(245,247,250,.55)}
+/* painel de voos */
+#board{position:absolute;left:60px;right:60px;top:430px;opacity:0;background:#0b0d10;border-radius:18px;padding:34px 30px;box-shadow:0 40px 90px rgba(0,0,0,.6);font-family:Inter}
+#board .hd{display:flex;justify-content:space-between;color:#f2c94c;font:700 30px Inter;letter-spacing:.16em;padding-bottom:16px;border-bottom:2px solid #2a2e35}
+#board .row{display:grid;grid-template-columns:120px 1fr 230px;gap:12px;padding:16px 0;border-bottom:1px solid #1d2128;color:#e8e8e8;font:600 30px Inter}
+#board .row .st{text-align:right;font-weight:700;letter-spacing:.06em}
+#board .row .st.ok{color:#6fd36f} #board .row .st.no{color:#ff5a4f}
+/* CTA */
+#cta{position:absolute;left:70px;right:70px;top:420px;text-align:center;opacity:0}
+#cta .q{font-weight:500;font-size:84px;line-height:1.08}
+#cta .q em{font-style:italic;color:#a9d3ff}
+#cta .c{font-family:Inter;font-weight:700;font-size:34px;letter-spacing:.14em;margin-top:40px;color:#a9d3ff}
+#cta .ideas{margin-top:46px;font-style:italic;font-size:40px;line-height:1.5;opacity:.92}
+#cta .follow{display:inline-block;margin-top:56px;padding:20px 42px;border:2px solid rgba(255,255,255,.8);border-radius:60px;font:700 26px Inter;letter-spacing:.18em}
+/* régua de altura da água */
+#ruler{position:absolute;opacity:0;font-family:Inter;font-weight:700}
+#ruler .ln{position:absolute;left:0;width:3px;background:#ffd34d;box-shadow:0 0 8px rgba(0,0,0,.5)}
+#ruler .tk{position:absolute;left:-14px;width:31px;height:3px;background:#ffd34d}
+#ruler .lb{position:absolute;left:26px;font-size:40px;color:#ffd34d;white-space:nowrap}

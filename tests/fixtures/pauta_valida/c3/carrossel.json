@@ -1,0 +1,62 @@
+{
+  "id": "c3",
+  "cor": "g",
+  "titulo": [
+    "DICAS DE",
+    "POSTURA"
+  ],
+  "slides": [
+    {
+      "tipo": "info",
+      "tag": "RESPIRAÇÃO",
+      "titulo": [
+        "EXPIRE NO",
+        "ESFORÇO"
+      ],
+      "anim": "squat.fbx",
+      "view": "front",
+      "texto": "Solte o ar na parte mais difícil do movimento e puxe na volta. Sem prender a respiração.",
+      "tagcor": "g"
+    },
+    {
+      "tipo": "info",
+      "tag": "OLHAR",
+      "titulo": [
+        "OLHE PARA",
+        "UM PONTO"
+      ],
+      "anim": "plank.fbx",
+      "view": "side",
+      "texto": "Escolha um ponto fixo e mantenha o pescoço alinhado com a coluna.",
+      "tagcor": "y"
+    },
+    {
+      "tipo": "erro",
+      "kicker": "ERRO",
+      "nome": "QUADRIL",
+      "anim": "plank.fbx",
+      "errado": "Quadril alto demais",
+      "certo": "Corpo em linha reta",
+      "erro": {
+        "view": "side",
+        "zone": "Hips",
+        "deform": {
+          "bone": "Hips",
+          "axis": "x",
+          "angle": 0.44
+        }
+      }
+    },
+    {
+      "tipo": "info",
+      "tag": "CORE",
+      "titulo": [
+        "ABDÔMEN FIRME"
+      ],
+      "anim": "plank.fbx",
+      "view": "low_side",
+      "texto": "Contraia o abdômen como se fosse receber um soco leve. A prancha muda.",
+      "tagcor": "r"
+    }
+  ]
+}

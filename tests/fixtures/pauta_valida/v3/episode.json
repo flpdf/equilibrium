@@ -1,0 +1,166 @@
+{
+  "anim": "plank.fbx",
+  "peak": {
+    "bone": "Hips",
+    "metric": "y"
+  },
+  "watermark": "@chefaodostreinos",
+  "topbar": {
+    "left": "VOCÊ · \"TÁ BOM ASSIM\"",
+    "right": "CHEFÃO DO CORE"
+  },
+  "captions": [
+    [
+      [
+        "PRANCHA",
+        ""
+      ]
+    ],
+    [
+      [
+        "3 ERROS",
+        "r"
+      ]
+    ],
+    [
+      [
+        "QUE ANULAM",
+        "r"
+      ],
+      [
+        "O CORE",
+        ""
+      ]
+    ],
+    [
+      [
+        "ERRO UM",
+        ""
+      ]
+    ],
+    [
+      [
+        "QUADRIL ALTO",
+        "r"
+      ]
+    ],
+    [
+      [
+        "ERRO DOIS",
+        ""
+      ]
+    ],
+    [
+      [
+        "OMBROS AFUNDADOS",
+        "r"
+      ]
+    ],
+    [
+      [
+        "ERRO TRÊS",
+        ""
+      ]
+    ],
+    [
+      [
+        "OLHAR PRA FRENTE",
+        "r"
+      ]
+    ],
+    [
+      [
+        "CORRIGIDO",
+        "g"
+      ]
+    ],
+    [
+      [
+        "SEGUE O CHEFÃO",
+        "g"
+      ]
+    ]
+  ],
+  "errors": [
+    {
+      "label": "QUADRIL ALTO",
+      "check": "CORPO EM LINHA",
+      "view": "side",
+      "zone": "Hips",
+      "deform": {
+        "bone": "Hips",
+        "axis": "x",
+        "angle": 0.44
+      }
+    },
+    {
+      "label": "OMBROS AFUNDADOS",
+      "check": "EMPURRE O CHÃO",
+      "view": "low_side",
+      "zone": "Shoulder",
+      "deform": [
+        {
+          "bone": "LeftShoulder",
+          "axis": "y",
+          "angle": 0.2
+        },
+        {
+          "bone": "RightShoulder",
+          "axis": "y",
+          "angle": -0.2
+        }
+      ]
+    },
+    {
+      "label": "OLHAR PRA FRENTE",
+      "check": "OLHAR PRA BAIXO",
+      "view": "front_low",
+      "zone": "Neck",
+      "deform": {
+        "bone": "Head",
+        "axis": "x",
+        "angle": -0.35
+      }
+    }
+  ],
+  "card": {
+    "name": [
+      "PRANCHA"
+    ],
+    "rows": [
+      [
+        "MÚSCULOS",
+        "CORE"
+      ],
+      [
+        "NÍVEL",
+        "★☆☆"
+      ],
+      [
+        "RISCO",
+        "MÉDIO",
+        "r"
+      ]
+    ]
+  },
+  "outro": {
+    "percent": 50,
+    "next": "Agachamento"
+  },
+  "cta": {
+    "cards": [
+      [
+        "PRANCHA",
+        "CORE · ★★☆☆☆"
+      ],
+      [
+        "FLEXÃO",
+        "PEITO · ★★★☆☆"
+      ],
+      [
+        "AFUNDO",
+        "PERNAS · ★★☆☆☆"
+      ]
+    ]
+  }
+}

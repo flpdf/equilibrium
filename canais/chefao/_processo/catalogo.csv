@@ -1,0 +1,60 @@
+arquivo;pasta;grupo;exercicio_pt;peak_bone;peak_metric;observacao
+Air Squat.fbx;Pernas;inferiores;Agachamento livre;Hips;minY;erros validados no exemplo
+Air Squat Bent Arms.fbx;Pernas;inferiores;Agachamento com braços flexionados;Hips;minY;
+Back Squat.fbx;Pernas;inferiores;Agachamento com barra (back squat);Hips;minY;barra não aparece; fale como "com barra nas costas"
+Overhead Squat.fbx;Pernas;inferiores;Agachamento overhead;Hips;minY;
+Pistol.fbx;Pernas;inferiores;Agachamento unilateral (pistol);Hips;minY;avançado
+Box Jump.fbx;Pernas;inferiores;Salto na caixa;Hips;maxY;caixa não aparece
+Push Up.fbx;Peito-Bracos;superiores;Flexão de braço;Hips;minY;erros validados no exemplo
+Jump Push Up.fbx;Peito-Bracos;superiores;Flexão com salto;Hips;minY;avançado
+Bicep Curl.fbx;Peito-Bracos;superiores;Rosca bíceps;RightHand;maxY;halter não aparece
+Front Raises.fbx;Peito-Bracos;superiores;Elevação frontal;RightHand;maxY;ombro (deltoide anterior)
+Situps.fbx;Core;core;Abdominal completo (sit-up);Head;maxY;
+Bicycle Crunch.fbx;Core;core;Abdominal bicicleta;Head;maxY;
+Circle Crunch.fbx;Core;core;Abdominal circular;Head;maxY;
+Plank.fbx;Core;core;Prancha;Hips;minY;isométrico: use "static":true nos erros
+Burpee.fbx;Cardio;cardio;Burpee;Hips;minY;
+Jumping Jacks.fbx;Cardio;cardio;Polichinelo;RightHand;maxY;
+Cross Jumps.fbx;Cardio;cardio;Salto cruzado;Hips;maxY;
+Cross Jumps Rotation.fbx;Cardio;cardio;Salto cruzado com rotação;Hips;maxY;
+Jumping Rope.fbx;Cardio;cardio;Pular corda;Hips;maxY;corda não aparece
+Pike Walk.fbx;Cardio;core;Inchworm (caminhada em pike);Hips;maxY;
+Snatch.fbx;Corpo-Inteiro;corpo_inteiro;Arranco (snatch);RightHand;maxY;avançado; barra não aparece
+Clean And Jerk.fbx;Corpo-Inteiro;corpo_inteiro;Arremesso (clean and jerk);RightHand;maxY;avançado
+Kettlebell Swing.fbx;Corpo-Inteiro;corpo_inteiro;Swing com kettlebell;RightHand;maxY;posterior/glúteo
+Sumo High Pull.fbx;Corpo-Inteiro;corpo_inteiro;Remada alta sumô;RightHand;maxY;
+Ginga.fbx;Capoeira;lutas;Ginga (capoeira);Hips;minY;use "lockRoot":true e "hookZoom":0.75
+Capoeira Idle.fbx;Capoeira;lutas;Ginga parada / base da capoeira;Hips;minY;lockRoot
+Au.fbx;Capoeira;lutas;Aú (estrela);Hips;maxY;avançado; lockRoot
+Armada.fbx;Capoeira;lutas;Armada (chute giratório);RightFoot;maxY;avançado; lockRoot
+Meia Lua De Frente.fbx;Capoeira;lutas;Meia-lua de frente;RightFoot;maxY;lockRoot
+Meia Lua De Compasso.fbx;Capoeira;lutas;Meia-lua de compasso;RightFoot;maxY;avançado; lockRoot
+Martelo.fbx;Capoeira;lutas;Martelo;RightFoot;maxY;lockRoot
+Bencao.fbx;Capoeira;lutas;Benção (chute frontal);RightFoot;maxZ;lockRoot
+Esquiva.fbx;Capoeira;lutas;Esquiva;Hips;minY;lockRoot
+Queixada.fbx;Capoeira;lutas;Queixada;RightFoot;maxY;lockRoot
+Rasteira.fbx;Capoeira;lutas;Rasteira;Hips;minY;lockRoot
+Boxing Jab.fbx;Boxe;lutas;Jab;LeftHand;maxZ;saco opcional: props saco-de-pancada.glb fit y 170 pos [0,0,75], hookView side
+Boxing Jab Cross.fbx;Boxe;lutas;Jab e direto;LeftHand;maxZ;idem
+Boxing Lead Hook.fbx;Boxe;lutas;Gancho (mão da frente);LeftHand;maxX;idem
+Boxing Lead Uppercut.fbx;Boxe;lutas;Uppercut (mão da frente);LeftHand;maxY;idem
+Boxing Rear Uppercut.fbx;Boxe;lutas;Uppercut (mão de trás);RightHand;maxY;idem
+Boxing Body Jab Cross.fbx;Boxe;lutas;Jab e direto no corpo;LeftHand;maxZ;idem
+Boxing Four Punch Combo.fbx;Boxe;lutas;Combinação de 4 golpes;LeftHand;maxZ;idem
+Boxing Bouncing Idle.fbx;Boxe;lutas;Guarda / base do boxe;Hips;minY;bom para erros de guarda (mãos baixas, queixo alto)
+Boxing High Block.fbx;Boxe;lutas;Bloqueio alto;RightHand;maxY;
+Boxing Dodge.fbx;Boxe;lutas;Esquiva do boxe;Hips;minY;
+Boxing Speedbag.fbx;Boxe;lutas;Saco de velocidade (speed bag);RightHand;maxY;saco de velocidade não aparece
+Treadmill Running.fbx;Corrida;cardio_maquinas;Corrida na esteira;LeftFoot;maxY;props esteira.glb fit y 150 rotY 90 pos [0,0,18]; modelOffset [0,9,0]
+Jogging.fbx;Corrida;cardio_maquinas;Trote;LeftFoot;maxY;sem esteira ou com a esteira (mesmos ajustes)
+Slow Run.fbx;Corrida;cardio_maquinas;Corrida leve;LeftFoot;maxY;idem
+Medium Run.fbx;Corrida;cardio_maquinas;Corrida moderada;LeftFoot;maxY;idem
+Fast Run.fbx;Corrida;cardio_maquinas;Corrida rápida;LeftFoot;maxY;idem
+Sprint.fbx;Corrida;cardio_maquinas;Tiro (sprint);LeftFoot;maxY;sem esteira
+Sitting Still Chair.fbx;Bicicleta;cardio_maquinas;Bicicleta ergométrica;Hips;minY;VER SKILL: props bicicleta-ergometrica.glb + pedal + baseDeform + modelOffset
+Swimming.fbx;Natacao;natacao;Nado crawl;Hips;minY;PISCINA: use "ambiente":"piscina" + "swim":{"stroke":"crawl"} (ver _processo/PISCINA.md)
+Swimming.fbx;Natacao;natacao;Nado costas;Hips;minY;PISCINA: use "ambiente":"piscina" + "swim":{"stroke":"costas"}
+Swimming.fbx;Natacao;natacao;Nado borboleta;Hips;minY;PISCINA: use "ambiente":"piscina" + "swim":{"stroke":"borboleta"} — avançado: foco em técnica
+Swimming.fbx;Natacao;natacao;Nado peito;Hips;minY;PISCINA: use "ambiente":"piscina" + "swim":{"stroke":"peito"}
+Treading Water.fbx;Natacao;natacao;Flutuação (pernada de sustentação);Hips;minY;PISCINA: use "ambiente":"piscina" + "swim":{"stroke":"flutuacao"}
+Swimming Breaststroke.fbx;Natacao;natacao;(não usar);Hips;minY;não usar: no fim do ciclo o boneco fica em pé
