@@ -3,7 +3,7 @@
 - Data do espelhamento: 2026-11-12
 - Pasta raiz `Chefao` no Google Drive: `1s-ibTfTpNnjXxNGNFB0xjVbJVnDVsVia`
 - Uso: um script futuro baixa os assets binários pelo id (conector do Drive, `download_file_content`). Arquivos de texto de `_processo` ficam espelhados neste repositório em `canais/chefao/_processo/`.
-- Estado do espelho: INCOMPLETO. Faltam no disco os arquivos listados na seção "Pendentes de download" (ver fim do arquivo).
+- Estado do espelho: COMPLETO em 12/11 (os 6 arquivos da seção "Pendentes de download" foram baixados por id com `scripts/drive_baixar.py`, bytes conferidos; `audio_falas.py` rebaixado pelo mesmo caminho).
 
 ## Pastas
 

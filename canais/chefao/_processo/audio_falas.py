@@ -245,7 +245,7 @@ def tratar(pasta, saida, perfil_json=None):
         sf.write(tmp_in, y.astype("float32"), SR)
         # de-esser + compressão leve (voz "na cara", sem bombear) + limitador
         r = ff(["-y", "-v", "error", "-i", tmp_in, "-af",
-                "deesser=i=0.4:m=0.5:f=0.5,",
+                "deesser=i=0.4:m=0.5:f=0.5,"
                 "acompressor=threshold=-22dB:ratio=2.5:attack=8:release=120:makeup=1,"
                 "alimiter=limit=0.89:attack=3:release=60:level=disabled", "-ar", str(SR), tmp_out])
         os.remove(tmp_in)
