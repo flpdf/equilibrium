@@ -9,7 +9,7 @@ Por dia: 3 vídeos (37 s, 1080×1920, narrados) e 3 carrosséis (5 imagens 1080�
 
 ## Caminhos
 - `DRIVE` = `G:\Meu Drive\Área de Trabalho\Videos-Claude\Chefao` no PC do Felipe. O terminal do PC não enxerga G:. Traga arquivos com `device_stage_files`, grave com `device_commit_files`, liste com `device_list_dir`. O processamento roda no container.
-- `DRIVE\_processo\` = kit: `grade.json`, `catalogo.csv`, `historico.csv`, `exemplos\`, `template.html`, `carrossel.html`, `carrossel.js`, `stills.js`, `render.js`, `render_all.sh`, `audio_falas.py`, `mix_musica.py`, `musicas\`.
+- Kit (scripts, moldes, catálogo): `canais/chefao/_processo/` neste repositório é a cópia que manda; `DRIVE\_processo\` é espelho. Assets pesados (`.fbx`, `.glb`, músicas) ficam no Drive e são baixados por id com `python3 scripts/drive_baixar.py manifesto canais/chefao/DRIVE.md --destino run/ --filtro '<pasta>'` (exige a pasta `Videos-Claude` compartilhada por link). Sem PC ligado, a entrega final usa `SendUserFile` e o conector do Drive para arquivos pequenos; vídeos vão para o Drive só com o PC (`device_commit_files`).
 - `DRIVE\_processo\pautas\AAAA-MM-DD\` = a pauta do dia (formato em `reference/formato-pauta.md`).
 - `DRIVE\Videos-Prontos\AAAA-MM-DD\` = saída.
 - Scripts deste repositório: `scripts/validar_pauta.py`, `scripts/checar_audio.py`.
