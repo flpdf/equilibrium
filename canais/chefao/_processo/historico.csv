@@ -1,0 +1,24 @@
+data;horario;exercicio;grupo;tema;arquivo_video;versao_narracao;creditos
+2026-11-04;teste;Agachamento livre;inferiores;3 erros (joelho, calcanhar, coluna);Agachamento-3-erros-narrado.mp4;1;866
+2026-11-04;teste;Flexão de braço;superiores;3 erros (quadril, cotovelo, cabeça);teste_flexao.mp4 (sem narração);-;0
+2026-11-05;manha;Agachamento com braços flexionados;inferiores;3 erros (joelho, pescoço, calcanhar);2026-11-05_manha_agachamento-bracos-flexionados.mp4;1 (única - 2ª take não iniciou);418
+2026-11-05;almoco;Rosca bíceps;superiores;3 erros (tronco balançando, cotovelo pra frente, ombro subindo);2026-11-05_almoco_rosca-biceps.mp4;1 (única - gerada após 4 tentativas com fila ocupada; tempos por silêncio, Scribe ocupado);392
+2026-11-05;noite;Prancha;core;3 erros (quadril caindo, quadril alto, cabeça caindo);2026-11-05_noite_prancha.mp4;1 (única; tempos por silêncio, Scribe ocupado);393
+2026-11-06;07:00;Abdominal completo (sit-up);core;DIA DE CORE;0700_video_abdominal-completo.mp4;voicestudio 37415022 (refeita 05);0
+2026-11-06;carrossel 09:30;4 ERROS QUE TRAVAM SEU ABDÔMEN;erros;DIA DE CORE;0930_carrossel_4-erros-abdomen_1-5.jpg;-;0
+2026-11-06;12:30;Abdominal bicicleta;core;DIA DE CORE;1230_video_abdominal-bicicleta.mp4;voicestudio 37415022 (refeitas 03,05,07; aviso fala 07);0
+2026-11-06;carrossel 15:30;4 CURIOSIDADES DO SEU CORE;curiosidades;DIA DE CORE;1530_carrossel_curiosidades-core_1-5.jpg;-;0
+2026-11-06;19:30;Abdominal circular;core;DIA DE CORE;1930_video_abdominal-circular.mp4;voicestudio 37415022 (refeitas 03,08; aviso fala 08);0
+2026-11-06;carrossel 21:30;MITO OU VERDADE? ABDÔMEN;mito;DIA DE CORE;2130_carrossel_mito-ou-verdade-abdomen_1-5.jpg;-;0
+2026-11-07;07:00;Trote × Esteira (3 diferenças);cardio_maquinas;DIA DE CARDIO;0700_video_trote-x-esteira.mp4;elevenlabs-7ete3BaGPf3vlbnyJnJK+musica:chefao_04_chip_150bpm_sync.mp3;404
+2026-11-07;carrossel 09:30;4 ERROS QUE TRAVAM SEU CARDIO;erros;DIA DE CARDIO;0930_carrossel_4-erros-cardio_1-5.jpg;-;0
+2026-11-07;12:30;Corrida leve;cardio_maquinas;DIA DE CARDIO;1230_video_corrida-leve.mp4;elevenlabs-7ete3BaGPf3vlbnyJnJK+musica:chefao_05_electro_150bpm_sync.mp3;363
+2026-11-07;carrossel 15:30;MITO OU VERDADE? CARDIO;mito;DIA DE CARDIO;1530_carrossel_mito-ou-verdade-cardio_1-5.jpg;-;0
+2026-11-07;19:30;Burpee;cardio;DIA DE CARDIO;1930_video_burpee.mp4;elevenlabs-7ete3BaGPf3vlbnyJnJK+musica:chefao_06_house_150bpm_sync.mp3;375
+2026-11-07;carrossel 21:30;SEQUÊNCIA CARDIO DO CHEFÃO;treino;DIA DE CARDIO;2130_carrossel_sequencia-cardio_1-5.jpg;-;0
+2026-11-10;07:00;Guarda / base do boxe;lutas;DIA DE BOXE;0700_video_guarda-base-do-boxe.mp4;elevenlabs-7ete3BaGPf3vlbnyJnJK+musica:chefao_01_chip_150bpm_sync.mp3;0
+2026-11-10;carrossel 09:30;4 BENEFÍCIOS DA NATAÇÃO;curiosidades;DIA DE BOXE;0930_carrossel_beneficios-natacao_1-5.jpg;-;0
+2026-11-10;12:30;Jab;lutas;DIA DE BOXE;1230_video_jab.mp4;elevenlabs-7ete3BaGPf3vlbnyJnJK+musica:chefao_02_electro_150bpm_sync.mp3;Modelo 3D: Punching Bag/Boxing Bag por CAL21 (Sketchfab, CC BY 4.0)
+2026-11-10;carrossel 15:30;MITO OU VERDADE? NATAÇÃO;mito;DIA DE BOXE;1530_carrossel_mito-ou-verdade-natacao_1-5.jpg;-;0
+2026-11-10;19:30;Combinação de 4 golpes;lutas;DIA DE BOXE;1930_video_combinacao-de-4-golpes.mp4;elevenlabs-7ete3BaGPf3vlbnyJnJK+musica:chefao_03_house_150bpm_sync.mp3;Modelo 3D: Punching Bag/Boxing Bag por CAL21 (Sketchfab, CC BY 4.0)
+2026-11-10;carrossel 21:30;NATAÇÃO X SEU CORPO;curiosidades;DIA DE BOXE;2130_carrossel_natacao-x-seu-corpo_1-5.jpg;-;0

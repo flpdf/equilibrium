@@ -1,0 +1,102 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="kit/hud.css">
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script></head>
+<body><div id="stage"></div>
+<div id="hud">
+  <div id="title" class="sh"><div class="brand">E SE FOSSE REAL</div><div class="q"></div></div>
+  <div id="stat" class="sh"><div class="num"></div><div class="sub"></div></div>
+  <div id="timer" class="sh"><div class="lab"></div><div class="val"></div>
+    <div class="gauge"><div class="bar"><i></i><b data-l="RECORDE 24H"></b></div><div class="mm"></div></div></div>
+  <div id="cap" class="sh"></div>
+  <div id="phone"><div class="dev"><div class="scr"><div class="clock">9:12</div><div class="date">segunda-feira, 10 de novembro</div>
+    <div class="alert"><div class="h"><i>!</i>ALERTA EXTREMO · DEFESA CIVIL</div><div class="t">Chuva intensa e contínua na capital</div>
+    <div class="b">Risco de alagamentos e deslizamentos. Evite áreas de risco e não atravesse ruas alagadas. Emergência: 199</div></div>
+    <div class="stack" style="top:612px"></div><div class="stack" style="top:642px;left:64px;right:64px;opacity:.6"></div></div></div></div>
+  <div id="board"><div class="hd"><span>PARTIDAS · CONGONHAS</span><span id="bclock">06:40</span></div><div id="brows"></div></div>
+  <div id="ruler" class="sh"><div class="ln"></div><div class="tk t0"></div><div class="tk t1"></div><div class="lb"></div></div>
+  <div id="cta" class="sh"><div class="q">Qual <em>"E se…"</em><br>a gente simula agora?</div><div class="c">COMENTA AÍ 👇</div>
+    <div class="ideas">E se a internet do Brasil caísse?<br>E se o Sol sumisse por 1 minuto?<br>E se ninguém mais nascesse?</div><div class="follow">SEGUE PRA VER A PRÓXIMA</div></div>
+  <div id="flash"></div><div id="fade"></div>
+</div>
+<script type="module">
+import * as THREE from 'three';
+import {createEngine,W,H} from './kit/engine.js';
+import {SKY} from './kit/weather.js';
+const q=new URLSearchParams(location.search);
+const EP=await (await fetch(q.get('ep')||'episodio.json')).json();
+const E=createEngine({ao:q.get('ao')==='1',scale:+(q.get('s')||0.667)}); window.E=E;
+let PEOPLE=null; try{ const m=await import('./kit/people.js'); PEOPLE=await m.createPeople(E,EP.people||{}); }catch(e){ console.warn('sem pessoas:',e.message); }
+const $=s=>document.querySelector(s);
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)); const lerp=(a,b,u)=>a+(b-a)*u; const ease=u=>0.5-0.5*Math.cos(Math.PI*clamp(u));
+const fmt=(n,dec=0)=>n.toLocaleString('pt-BR',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+// ---------- árvore que cai + faíscas ----------
+const fall=new THREE.Group(); { const tm=new THREE.MeshStandardMaterial({color:0x5a4634,roughness:.9}); const lm=new THREE.MeshStandardMaterial({color:0x3f7a35,roughness:.8});
+  const tr=new THREE.Mesh(new THREE.BoxGeometry(0.45,7,0.45),tm); tr.position.y=3.5; const c1=new THREE.Mesh(new THREE.BoxGeometry(4.6,3.4,4.6),lm); c1.position.y=7.6; const c2=new THREE.Mesh(new THREE.BoxGeometry(3,2.2,3),lm); c2.position.set(0.4,9.6,0.3);
+  for(const m of [tr,c1,c2]){ m.castShadow=true; fall.add(m); } fall.visible=false; E.scene.add(fall); }
+const SPN=160; const sparks=new THREE.InstancedMesh(new THREE.SphereGeometry(0.05,6,4),new THREE.MeshBasicMaterial({color:0xfff2b0,fog:false}),SPN); sparks.frustumCulled=false; sparks.visible=false; E.scene.add(sparks);
+const spSeed=[...Array(SPN)].map(()=>[Math.random()-0.5,Math.random(),Math.random()-0.5,Math.random()]);
+const _m=new THREE.Matrix4();
+function doSparks(age,at){ if(age<0||age>1.6){ sparks.visible=false; return; } sparks.visible=true; sparks.count=SPN;
+  spSeed.forEach((s,i)=>{ const a=age-s[3]*0.4; if(a<0){ _m.makeScale(0,0,0); sparks.setMatrixAt(i,_m); return; } const v=[s[0]*9,2+s[1]*6,s[2]*9];
+    const p=[at[0]+v[0]*a,at[1]+v[1]*a-4.9*a*a,at[2]+v[2]*a]; const sc=Math.max(0,1-a/1.0); _m.makeScale(sc,sc,sc).setPosition(...p); sparks.setMatrixAt(i,_m); }); sparks.instanceMatrix.needsUpdate=true; }
+// ---------- painel de voos ----------
+const FL=[['06:55','RIO DE JANEIRO (SDU)'],['07:05','BRASÍLIA'],['07:20','BELO HORIZONTE'],['07:30','PORTO ALEGRE'],['07:45','CURITIBA'],['08:00','SALVADOR'],['08:10','RECIFE'],['08:25','FLORIANÓPOLIS'],['08:40','GOIÂNIA']];
+$('#brows').innerHTML=FL.map(f=>`<div class="row"><span>${f[0]}</span><span>${f[1]}</span><span class="st"></span></div>`).join('');
+function board(u){ document.querySelectorAll('#board .row .st').forEach((el,i)=>{ const k=u*1.6-i*0.13; const no=k>0.1; el.textContent=no?'CANCELADO':'CONFIRMADO'; el.className='st '+(no?'no':'ok'); el.style.opacity=no&&k<0.18?0.3:1; }); }
+// ---------- render de um instante ----------
+const B=EP.beats;
+function beatAt(t){ for(let i=0;i<B.length;i++){ if(t>=B[i].t[0]&&t<B[i].t[1]) return [B[i],i]; } return [B[B.length-1],B.length-1]; }
+function mixEnv(a,b,u){ if(!b) return {...a}; const o={...a}; for(const k in b){ const va=a[k], vb=b[k]; if(typeof vb==='number'&&typeof va==='number') o[k]=lerp(va,vb,u); else if(Array.isArray(vb)&&Array.isArray(va)) o[k]=va.map((x,i)=>lerp(x,vb[i],u)); else o[k]=u<0.5?(va??vb):vb; } return o; }
+function show(el,on,u,dur){ const fi=clamp(u*dur/0.35), fo=clamp((1-u)*dur/0.3); el.style.opacity=on?Math.min(fi,fo):0; el.style.transform=on?`translateY(${(1-fi)*14}px)`:''; }
+window.renderAt=(t)=>{
+  const [b,bi]=beatAt(t); const dur=b.t[1]-b.t[0]; const lt=t-b.t[0]; const u=lt/dur; const ue=ease(u);
+  const fx=b.fx||{};
+  // ambiente
+  const env=mixEnv(b.env||{},b.env2,ue); let flash=0;
+  for(const f of (fx.flash||[])){ const a=lt-f; if(a>=0&&a<0.55) flash=Math.max(flash,(a<0.08?1:a<0.16?0.25:a<0.24?0.85:Math.max(0,1-(a-0.24)/0.3))*(fx.flashK||1)); }
+  env.flash=flash; if(fx.sun) SKY.uSun.value.set(...fx.sun).normalize(); else SKY.uSun.value.set(-0.38,0.82,-0.42).normalize();
+  SKY.uCloudSpeed.value=fx.cloud||1;
+  E.setEnv(env);
+  // câmera
+  const c=b.cam; const pu=fx.camEase==='lin'?u:ue; const shake=(fx.shake||0)*Math.max(flash, fx.shakeAt!==undefined? Math.max(0,1-Math.abs(lt-fx.shakeAt)*3):0);
+  const pos=c[0].map((x,i)=>lerp(x,(c[3]||c[0])[i],pu)+(i<2?Math.sin(t*37+i*3)*shake*0.15:0)); const tgt=c[1].map((x,i)=>lerp(x,(c[4]||c[1])[i],pu)); const fov=lerp(c[2],c[5]??c[2],pu);
+  // tremido de mão leve (handheld)
+  const hh=fx.hand??0.04; pos[0]+=Math.sin(t*0.9)*hh; pos[1]+=Math.sin(t*1.3+1)*hh*0.6;
+  E.look(pos,tgt,fov);
+  // cenários
+  E.hill.userData.setSlide(fx.slide? clamp(lerp(fx.slide[0],fx.slide[1],clamp((lt-(fx.slideAt||0))/(dur-(fx.slideAt||0))))) : 0);
+  E.river.userData.update(t,{speed:fx.traffic??1,water:env.waterY??-3});
+  if(fx.fill!==undefined) E.market.userData.setFill(fx.fill);
+  // árvore caindo
+  if(fx.tree){ const T=fx.tree; fall.visible=true; fall.position.set(...T.pos); const a=clamp((lt-T.at)/0.9); const ang=Math.pow(a,2.2)*T.ang; fall.rotation.set(0,0,ang*(T.dir||1)); doSparks(lt-T.at-0.85,T.spark); }
+  else { fall.visible=false; sparks.visible=false; }
+  if(fx.lampsOffAt!==undefined && lt>fx.lampsOffAt){ E.props.userData.bulbs.visible=false; E.WU.uBlack.value=Math.max(E.WU.uBlack.value,fx.blackAfter??0.9); }
+  // pessoas
+  if(PEOPLE) PEOPLE.update(t,b,lt,env);
+  E.frame(t,{traffic:fx.traffic??1,stallY:fx.stall??-1,float:fx.float??0,shadowSize:fx.shadow||120,bolt:fx.bolt?flash:0,boltPos:fx.bolt});
+  // ---------- HUD ----------
+  const cv=E.renderer.domElement; cv.style.filter=fx.blur?`blur(${fx.blur}px) brightness(${fx.dim??0.7})`:'';
+  show($('#title'),!!b.title,u,dur); if(b.title) $('#title .q').innerHTML=b.title;
+  show($('#cap'),!!b.cap,u,dur); if(b.cap) $('#cap').innerHTML=b.cap;
+  const st=b.stat; show($('#stat'),!!st,u,dur);
+  if(st){ let txt=st.n; if(st.v!==undefined){ const k=clamp(lt/(st.dur||0.9)); const kk=1-Math.pow(1-k,3); txt=(st.pre||'')+fmt(st.v*kk,st.dec||0)+(st.suf||''); } $('#stat .num').textContent=txt; $('#stat .sub').innerHTML=st.s; $('#stat .num').style.fontSize=(st.size||150)+'px'; }
+  const tm=b.timer; show($('#timer'),!!tm,u,99); $('#timer').style.opacity=tm?1:0;
+  if(tm){ $('#timer .lab').textContent=EP.timerLabel; $('#timer .val').textContent=tm; const g=b.gauge||[0,0]; const mm=lerp(g[0],g[1],clamp(lt/Math.min(dur,2.2)));
+    $('#timer .bar i').style.width=(100*mm/EP.gaugeMax)+'%'; $('#timer .bar b').style.left=(100*EP.gaugeRec/EP.gaugeMax)+'%';
+    $('#timer .mm').innerHTML=`CHUVA ACUMULADA <span>${fmt(Math.round(mm))} MM</span>`; $('#timer .gauge').style.display=g[1]>0?'block':'none'; }
+  // sobreposições
+  const ov=fx.overlay;
+  show($('#phone'),ov==='phone',u,dur); if(ov==='phone') $('#phone').style.transform=`translateY(${(1-ease(lt/0.6))*120}px) scale(${1+lt*0.012})`;
+  show($('#board'),ov==='board',u,dur); if(ov==='board') board(lt/dur);
+  show($('#cta'),ov==='cta',u,dur);
+  const rl=$('#ruler'); if(ov==='ruler'){ const R=fx.ruler; const p0=new THREE.Vector3(...R.base).project(E.cam), p1=new THREE.Vector3(R.base[0],R.base[1]+R.h,R.base[2]).project(E.cam);
+      const x=(p0.x*0.5+0.5)*W, y0=(-p0.y*0.5+0.5)*H, y1=(-p1.y*0.5+0.5)*H; const k=clamp((lt-0.4)/1.2); const yk=lerp(y0,y1,ease(k));
+      rl.style.opacity=Math.min(1,lt/0.3)*clamp((dur-lt)/0.3); rl.style.left=x+'px'; rl.style.top='0px';
+      rl.querySelector('.ln').style.cssText=`top:${yk}px;height:${y0-yk}px`; rl.querySelector('.t0').style.top=(y0-1)+'px'; rl.querySelector('.t1').style.top=(yk-1)+'px';
+      const lb=rl.querySelector('.lb'); lb.style.top=(yk-26)+'px'; lb.textContent=fmt(R.h*k,2)+' m'; }
+  else rl.style.opacity=0;
+  $('#flash').style.opacity=flash*0.55*(fx.flashScreen??1);
+  // fade nas pontas
+  const fin=b.fadeIn?clamp(1-lt/b.fadeIn):0, fout=b.fadeOut?clamp(1-(dur-lt)/b.fadeOut):0; $('#fade').style.opacity=Math.max(fin,fout);
+  return bi; };
+window.EP=EP; window.READY=true;
+</script></body></html>
