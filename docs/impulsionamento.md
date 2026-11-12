@@ -50,8 +50,10 @@ Em `metricas.json`, cada post pode ter `midia_id` (ID da mídia do reel no Insta
 |---|---|
 | `META_ACCESS_TOKEN` | token de longa duração |
 | `META_AD_ACCOUNT_ID` | `act_123...` |
-| `META_PAGE_ID` | ID da Página |
-| `META_IG_USER_ID` | ID da conta profissional do Instagram |
+| `META_PAGE_ID` | reserva: ID da Página, só para canal sem bloco `meta` |
+| `META_IG_USER_ID` | reserva: ID do Instagram, só para canal sem bloco `meta` |
+
+Página e Instagram de cada canal ficam em `config/ads.json`, em `canais.<canal>.meta` (`page_id`, `ig_user_id`). São IDs, não segredos. Hoje: `chefao` → @chefaodostreinos (`17841472492442815`), `se-acontecesse` → @eseacontecessse (`17841453394645080`), `alerta-sp` → @spoff.line (`17841428163246077`).
 | `TIKTOK_ACCESS_TOKEN` | token da Marketing API |
 | `TIKTOK_ADVERTISER_ID` | ID do anunciante |
 

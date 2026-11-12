@@ -243,7 +243,7 @@ def cmd_executar(a: argparse.Namespace) -> int:
         for d in decisoes:
             objetivo = config["plataformas"][d["plataforma"]]["objetivo"]
             print(f"== {d['post_id']} ({d['plataforma']}) R$ {d['orcamento']:.0f} por {d['duracao_dias']} dias")
-            registros.append(adaptadores[d["plataforma"]].criar(d, objetivo, agora, confirmar))
+            registros.append(adaptadores[d["plataforma"]].criar(d, objetivo, agora, confirmar, config))
     except AdsError as e:
         print(f"Erro: {e}", file=sys.stderr)
         _gravar_historico(a.historico, registros, agora, confirmar)

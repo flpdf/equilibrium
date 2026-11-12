@@ -79,7 +79,8 @@ def _post(caminho: str, payload: dict[str, Any], token: str) -> dict[str, Any]:
     return resp.get("data") or {}
 
 
-def criar(d: dict[str, Any], objetivo: str, agora: datetime, confirmar: bool) -> dict[str, Any]:
+def criar(d: dict[str, Any], objetivo: str, agora: datetime, confirmar: bool,
+          config: dict[str, Any] | None = None) -> dict[str, Any]:
     env = variaveis(VARS, exigir=confirmar)
     adv, token = env["TIKTOK_ADVERTISER_ID"], env["TIKTOK_ACCESS_TOKEN"]
     if objetivo not in OBJETIVOS:

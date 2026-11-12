@@ -8,7 +8,7 @@ description: Gerenciador diário de impulsionamento (ads) dos vídeos publicados
 Metas: visualizações, seguidores e retorno financeiro, com orçamento fixo e regras em `config/ads.json`. A decisão é código (`scripts/impulsionar.py`); o modelo só coleta métricas, executa e relata. Detalhes de contas, chaves e limites em `docs/impulsionamento.md`.
 
 ## Pré-checagem
-- Segredos do ambiente: `META_ACCESS_TOKEN`, `META_AD_ACCOUNT_ID`, `META_PAGE_ID`, `META_IG_USER_ID`, `TIKTOK_ACCESS_TOKEN`, `TIKTOK_ADVERTISER_ID`. Faltando um par: a plataforma correspondente roda só em `--dry-run` e você avisa.
+- Segredos do ambiente: `META_ACCESS_TOKEN`, `META_AD_ACCOUNT_ID` (Página e Instagram por canal em `config/ads.json`), `TIKTOK_ACCESS_TOKEN`, `TIKTOK_ADVERTISER_ID`. Faltando um par: a plataforma correspondente roda só em `--dry-run` e você avisa.
 - Rede: `graph.facebook.com` e `business-api.tiktok.com` liberados.
 - `config/ads.json` existe e `orcamento_diario_total` > 0. Com 0, a tarefa só relata.
 

@@ -198,3 +198,22 @@ def test_cli_executar_dry_run_padrao_e_confirmo(sem_rede, tmp_path, capsys):
     assert imp.main(["executar", str(f), "--historico", str(tmp_path / "h.json")]) == 0
     assert not (tmp_path / "h.json").exists()
     assert imp.main(["executar", str(f), "--executar"]) == 2
+
+
+def test_meta_ids_por_canal(sem_rede, capsys):
+    cfg = json.loads((RAIZ / "config" / "ads.json").read_text(encoding="utf-8"))
+    meta.criar(DEC, "seguidores", AGORA, confirmar=False, config=cfg)
+    out = capsys.readouterr().out
+    assert '"instagram_user_id": "17841472492442815"' in out and '"page_id": "1506404455885952"' in out
+    contas = {c: meta.contas_do_canal({"canal": c}, cfg, exigir=True)["ig_user_id"]
+              for c in ("chefao", "se-acontecesse", "alerta-sp")}
+    assert contas == {"chefao": "17841472492442815", "se-acontecesse": "17841453394645080",
+                      "alerta-sp": "17841428163246077"}
+
+
+def test_meta_canal_sem_ids_exige_ambiente(monkeypatch):
+    from ads.comum import AdsError
+    monkeypatch.delenv("META_PAGE_ID", raising=False)
+    monkeypatch.delenv("META_IG_USER_ID", raising=False)
+    with pytest.raises(AdsError, match="novo"):
+        meta.contas_do_canal({"canal": "novo"}, {"canais": {}}, exigir=True)

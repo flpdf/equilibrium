@@ -2,7 +2,9 @@
 
 Fluxo: campanha -> conjunto de anúncios -> criativo (reel existente) -> anúncio.
 Sem `confirmar`, nada é enviado: imprime os payloads exatos e não toca a rede.
-Variáveis: META_ACCESS_TOKEN, META_AD_ACCOUNT_ID (act_123), META_PAGE_ID, META_IG_USER_ID.
+Variáveis: META_ACCESS_TOKEN, META_AD_ACCOUNT_ID (act_123).
+Página e Instagram vêm de config/ads.json (canais.<canal>.meta); META_PAGE_ID e
+META_IG_USER_ID no ambiente só servem de reserva para canal sem esse bloco.
 """
 from __future__ import annotations
 
@@ -15,7 +17,8 @@ from ads.comum import AdsError, chamar, mostrar, variaveis
 
 VERSAO = "v21.0"
 BASE = f"https://graph.facebook.com/{VERSAO}"
-VARS = ["META_ACCESS_TOKEN", "META_AD_ACCOUNT_ID", "META_PAGE_ID", "META_IG_USER_ID"]
+VARS = ["META_ACCESS_TOKEN", "META_AD_ACCOUNT_ID"]
+RESERVA = ["META_PAGE_ID", "META_IG_USER_ID"]
 
 # objetivo da plataforma (config) -> (objective, optimization_goal)
 OBJETIVOS = {
@@ -62,13 +65,26 @@ def payload_conjunto(d: dict[str, Any], objetivo: str, campanha_id: str, agora: 
     }
 
 
-def payload_criativo(d: dict[str, Any], env: dict[str, str]) -> dict[str, Any]:
+def contas_do_canal(d: dict[str, Any], config: dict[str, Any] | None, exigir: bool) -> dict[str, str]:
+    """Página e Instagram do canal: config/ads.json primeiro, ambiente como reserva."""
+    bloco = ((config or {}).get("canais", {}).get(d["canal"]) or {}).get("meta") or {}
+    if bloco.get("page_id") and bloco.get("ig_user_id"):
+        return {"page_id": str(bloco["page_id"]), "ig_user_id": str(bloco["ig_user_id"])}
+    try:
+        env = variaveis(RESERVA, exigir=exigir)
+    except AdsError:
+        raise AdsError(f"Canal {d['canal']}: sem canais.{d['canal']}.meta em config/ads.json "
+                       "e sem META_PAGE_ID/META_IG_USER_ID no ambiente") from None
+    return {"page_id": env["META_PAGE_ID"], "ig_user_id": env["META_IG_USER_ID"]}
+
+
+def payload_criativo(d: dict[str, Any], contas: dict[str, str]) -> dict[str, Any]:
     midia = d.get("extra", {}).get("midia_id") or "<midia_id do reel>"
     return {
         "name": _nome(d),
         "object_story_spec": {
-            "page_id": env["META_PAGE_ID"],
-            "instagram_user_id": env["META_IG_USER_ID"],
+            "page_id": contas["page_id"],
+            "instagram_user_id": contas["ig_user_id"],
         },
         "source_instagram_media_id": midia,
     }
@@ -96,15 +112,17 @@ def _id(resp: dict[str, Any], etapa: str) -> str:
     return str(resp["id"])
 
 
-def criar(d: dict[str, Any], objetivo: str, agora: datetime, confirmar: bool) -> dict[str, Any]:
+def criar(d: dict[str, Any], objetivo: str, agora: datetime, confirmar: bool,
+          config: dict[str, Any] | None = None) -> dict[str, Any]:
     """Cria (ou simula) o anúncio. Devolve o registro para o historico_ads.json."""
     env = variaveis(VARS, exigir=confirmar)
+    contas = contas_do_canal(d, config, exigir=confirmar)
     conta = env["META_AD_ACCOUNT_ID"]
     ph = lambda n: f"<{n}>"  # noqa: E731
     etapas = [
         ("campanha", f"{conta}/campaigns", payload_campanha(d, objetivo)),
         ("conjunto", f"{conta}/adsets", None),
-        ("criativo", f"{conta}/adcreatives", payload_criativo(d, env)),
+        ("criativo", f"{conta}/adcreatives", payload_criativo(d, contas)),
         ("anuncio", f"{conta}/ads", None),
     ]
     ids: dict[str, str] = {}
