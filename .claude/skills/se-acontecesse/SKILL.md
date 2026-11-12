@@ -16,14 +16,14 @@ Um episódio por dia, estilo Simplysimulated: cenas 3D low-poly, relógio da sim
 - Arquivo > 28 MB: `SendUserFile` e `device_commit_files` com o `fileUuid`.
 
 ## Portão
-`estado.json` = `{"pauta": proposta|em_ajuste|aprovada, "producao": pendente|em_andamento|produzida|falhou}`. PRODUÇÃO só com `pauta` ∈ {proposta, aprovada}. `em_ajuste` na execução das 22:41: encerre o turno; a execução das 23:41 produz a última versão gravada. Se `producao` já for `produzida`, termine em uma linha. Sem pauta nenhuma: escreva a pauta você mesmo (etapa A, sem esperar resposta) e produza.
+`estado.json` = `{"pauta": proposta|em_ajuste|aprovada, "producao": pendente|em_andamento|produzida|falhou}`. PRODUÇÃO só com `pauta` = `aprovada`. `em_ajuste` na execução das 22:41: encerre o turno; a execução das 23:41 produz a última versão gravada. Se `producao` já for `produzida`, termine em uma linha. Sem pauta nenhuma: escreva a pauta você mesmo (etapa A, sem esperar resposta) e produza.
 
 ## A. PAUTA (véspera, 18:23)
-1. Tema do `temas.csv` girando categorias (Terra e clima, espaço, física, corpo e vida, sociedade); nunca a mesma categoria dois dias seguidos. Pedido do Felipe vem antes.
+1. Tema pela skill `tendencias` (agente `pesquisador` grava `tendencias.json`). Reserva: `temas.csv` girando categorias (Terra e clima, espaço, física, corpo e vida, sociedade), nunca a mesma dois dias seguidos. Pedido do Felipe, se houver, vem antes.
 2. Pesquise CADA número na web com fonte confiável (agente `pesquisador`). Sem fonte, o número não entra. Grave `fontes.md` com links e contas.
 3. Roteiro pelas regras de `reference/roteiro.md`.
-4. Grave `pauta.json`, `roteiro.md`, `fontes.md`, `estado.json` (`pauta: proposta`, `producao: pendente`) em `_processo\pautas\<amanhã>\`.
-5. Mande a pauta curta ao Felipe (tema, gancho, 3 números principais, virada, duração) e encerre o turno. Se ele responder: `estado.pauta: em_ajuste` antes de mexer → ajustes → `aprovada` → confirme em uma linha. Sem resposta, a produção segue a proposta.
+4. Grave `pauta.json`, `roteiro.md`, `fontes.md`, `tendencias.json`, `estado.json` (`pauta: aprovada`, `producao: pendente`) em `_processo\pautas\<amanhã>\`. A pauta não depende de aprovação.
+5. Avise o Felipe (tema, gancho, 3 números principais, origem do tema) e encerre o turno. Só se ele responder antes da PRODUÇÃO: `estado.pauta: em_ajuste` antes de mexer → ajustes → `aprovada` → confirme em uma linha.
 
 ## B. PRODUÇÃO (noite, 22:41 e 23:41)
 1. Portão. Traga `_kit`, `Base` e a pauta; `npm install` (não rode `playwright install`).

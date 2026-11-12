@@ -46,7 +46,7 @@ Um worker barato que erra e gera retrabalho sai mais caro que o orquestrador ace
 
 ## Linha de produção de vídeo
 
-Skills por canal em `.claude/skills/`: `chefao`, `se-acontecesse`, `alerta-sp`, `publicacao`, `video-ia`. Cada SKILL.md tem uma página; o detalhe fica em `reference/` e entra no contexto só no passo que precisa. Mecânica e diagnóstico em `docs/mecanica-producao-video.md`; tarefas agendadas em `docs/tarefas-agendadas.md`.
+Skills por canal em `.claude/skills/`: `chefao`, `se-acontecesse`, `alerta-sp`, `publicacao`, `video-ia`; transversais: `tendencias` (tema do dia pelo vidIQ, passo zero da pauta) e `impulsionamento` (ads por regras). Cada SKILL.md tem uma página; o detalhe fica em `reference/` e entra no contexto só no passo que precisa. Mecânica e diagnóstico em `docs/mecanica-producao-video.md`; tarefas agendadas em `docs/tarefas-agendadas.md`.
 
 Pastas no PC do Felipe (Google Drive), uma por linha, dentro de `G:\Meu Drive\Área de Trabalho\Videos-Claude\`: `Chefao` (antiga Mixamo-Academia), `E-Se-Fosse-Real` (canal Se Acontecesse), `Alerta-SP` (saída; o projeto continua em `C:\AlertaSP`) e `Videos-IA` (vídeos avulsos). As sessões na nuvem leem essa pasta pelo conector do Google Drive; os arquivos de texto dos kits ficam espelhados em `canais/` neste repositório.
 
@@ -54,7 +54,8 @@ Regras fixas da linha:
 - Código faz o mecânico: `scripts/validar_pauta.py` antes de qualquer modelo olhar uma pauta; `scripts/checar_audio.py` antes de montar narração.
 - Portão fechado = encerrar o turno. Nunca `send_later` em loop na mesma sessão.
 - Uma fonte de verdade: este repositório. Tarefas agendadas têm prompt de uma linha apontando para a skill.
-- Texto é do `roteirista`, imagem é do `conferente`, número é do `pesquisador`. Opus e Fable só quando um desses reporta algo fora do procedimento.
+- Texto é do `roteirista`, imagem é do `conferente`, número e tendência são do `pesquisador`. Opus e Fable só quando um desses reporta algo fora do procedimento.
+- Criação não espera aprovação: a pauta nasce `padrao`/`aprovada` e segue. Publicação e impulsionamento seguem `config/publicacao.json` e `config/ads.json`.
 
 ## Convenções de git
 

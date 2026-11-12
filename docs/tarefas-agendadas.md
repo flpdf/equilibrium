@@ -12,6 +12,7 @@ Princípio: prompt de uma linha apontando para a skill do repositório; modelo d
 | Alerta SP – episódio do dia | 17:47 | Sonnet | Etapa A da skill `alerta-sp` para HOJE; no fim, `send_later` às 02:30 com "Etapa B (PRODUÇÃO) da skill `alerta-sp`". |
 | Publicações do dia (vidIQ) | 08:49 e 10:49 | Sonnet | Skill `publicacao`, para HOJE. |
 | Resumo matinal | 07:46, seg–sex | Sonnet | inalterado (`/morning`, engenharia civil) |
+| Impulsionamento (ads) | 12:17 e 20:17 | Sonnet | Skill `impulsionamento`, para HOJE. (criada em 12/11, desativada; conectores vidIQ e Metricool) |
 
 Lembretes de story do Alerta SP (Dia 0, 1 e 2; 11–13/11, 20:55): desativados pelo Felipe; ficam até ele decidir se posta os stories.
 
@@ -39,5 +40,5 @@ Fora de todas: Metricool (não é mais usado), CargoosCorp (exige autenticação
 ## Para reativar a linha
 1. Dar merge deste trabalho na `main` (as tarefas clonam a `main`).
 2. Colocar os dois comandos de setup de `docs/mecanica-producao-video.md` § 5 no script do ambiente.
-2b. Na configuração de rede do ambiente (menu do ambiente na barra de título, Editar, Network access), adicionar aos domínios permitidos: `drive.google.com`, `drive.usercontent.google.com`, `www.googleapis.com`, `lh3.googleusercontent.com` e `huggingface.co`, mantendo marcada a opção de gerenciadores de pacotes. Testado em 11/11: sem isso o container não baixa nada do Drive (conexão recusada) e o whisper não baixa o modelo. Os arquivos de texto dos kits já estão em `canais/`; os pesados (`.fbx`, `.glb`, `.mp3`, músicas) continuam no Drive e precisam desse acesso para a produção rodar sem o PC.
+2b. Na configuração de rede do ambiente (menu do ambiente na barra de título, Editar, Network access), adicionar aos domínios permitidos: `drive.google.com`, `drive.usercontent.google.com`, `www.googleapis.com`, `lh3.googleusercontent.com`, `huggingface.co`, `cdn-lfs.hf.co`, `cdn-lfs-us-1.hf.co`, `cas-bridge.xethub.hf.co`, `cas-server.xethub.hf.co` (modelo do whisper), `trends.google.com` (Google Trends), `graph.facebook.com` e `business-api.tiktok.com` (ads), mantendo marcada a opção de gerenciadores de pacotes. Testado em 12/11: Drive e `huggingface.co` já abrem; os hosts `hf.co`, Trends e ads ainda não. Os arquivos de texto dos kits já estão em `canais/`; os pesados (`.fbx`, `.glb`, `.mp3`, músicas) continuam no Drive e precisam desse acesso para a produção rodar sem o PC.
 3. Reativar uma tarefa por vez, começando pela pauta do Chefão, e ler a sessão resultante.

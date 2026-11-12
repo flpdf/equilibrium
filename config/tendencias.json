@@ -1,0 +1,27 @@
+{
+  "creditos_vidiq_max_por_canal_dia": 15,
+  "janela_dias": 30,
+  "minimo_outliers_para_escolher": 2,
+  "multiplo_mediana_min": 5,
+  "pesos": {"outliers": 0.5, "multiplo_mediana": 0.3, "crescimento_busca": 0.2},
+  "canais": {
+    "chefao": {
+      "publico": "Culture/Region: Brazil/Brazilian Portuguese; Global: false; Demographics: adults 18-40 who train at the gym, beginners and intermediates, want technique tips;",
+      "consultas": [
+        "erros comuns na execução de exercícios de academia e correção de postura",
+        "técnica correta de exercício de musculação explicada com animação ou boneco 3D"
+      ],
+      "nicho_rising": "treino na academia",
+      "fallback": "grade.json"
+    },
+    "se-acontecesse": {
+      "publico": "Culture/Region: Brazil/Brazilian Portuguese; Global: true; Demographics: curious adults 16-45, science and what-if simulations;",
+      "consultas": [
+        "e se acontecesse: simulação do que aconteceria com a Terra, o corpo humano ou a sociedade em um cenário hipotético",
+        "animação 3D de cenário hipotético com dados reais, estilo simulação"
+      ],
+      "nicho_rising": "e se acontecesse",
+      "fallback": "temas.csv"
+    }
+  }
+}

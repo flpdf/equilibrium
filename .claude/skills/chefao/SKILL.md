@@ -23,23 +23,23 @@ Por dia: 3 vídeos (37 s, 1080×1920, narrados) e 3 carrosséis (5 imagens 1080�
 
 ## A. PAUTA (véspera, 17:47)
 1. Data alvo = amanhã. Traga `grade.json`, `catalogo.csv`, `historico.csv`, `exemplos\` e as pautas dos últimos 7 dias.
-2. Tema do dia pela `grade.json` → `dias`. Vídeos: siga a `trilha` do tema. Manhã = o mais básico que não saiu em 7 dias; almoço = o seguinte; noite = o mais desafiador (avançado só à noite, foco em controle). Sem repetir exercício no dia. Grupo com menos de 3 livres: repita o menos recente com ângulo novo. 3 erros por vídeo inéditos para aquele exercício no `historico.csv`. Linhas "não usar" do catálogo ficam fora. Natação só quando o tema incluir `natacao` (`reference/natacao.md`).
+2. Tema do dia pela skill `tendencias` (agente `pesquisador` grava `tendencias.json`; `origem: tendencia`). Se cair na reserva, tema pela `grade.json` → `dias`. Vídeos: o exercício escolhido entra como vídeo da manhã; os outros dois seguem a `trilha` do grupo. Manhã = o mais básico que não saiu em 7 dias; almoço = o seguinte; noite = o mais desafiador (avançado só à noite, foco em controle). Sem repetir exercício no dia. Grupo com menos de 3 livres: repita o menos recente com ângulo novo. 3 erros por vídeo inéditos para aquele exercício no `historico.csv`. Linhas "não usar" do catálogo ficam fora. Natação só quando o tema incluir `natacao` (`reference/natacao.md`).
 3. Carrosséis: 3 tipos diferentes de `grade.json` → `carrosseis.tipos`, um deles de preferência "erros".
 4. Escreva os arquivos com os formatos de `reference/formato-pauta.md`, respeitando `reference/regras-conteudo.md`. Deformações validadas em `reference/deforms.md`. Rode `python3 scripts/validar_pauta.py <pasta>`; corrija até 0 erros.
-5. Grave em `DRIVE\_processo\pautas\<amanhã>\` com `pauta.json` `status: proposta` e `estado.json` `{"pauta":"proposta","audio":"pendente","producao":"pendente"}`.
-6. Mande ao Felipe e encerre o turno:
+5. Grave em `DRIVE\_processo\pautas\<amanhã>\` com `pauta.json` `status: padrao` e `estado.json` `{"pauta":"padrao","audio":"pendente","producao":"pendente"}`. A pauta não depende de aprovação: segue para o ÁUDIO como está.
+6. Avise o Felipe (informativo, sem esperar) e encerre o turno:
    ```
    📋 Pauta de <dia>, <data> — <TEMA>
    🎬 07:00 · <exercício> — <erro1>, <erro2>, <erro3>
    🎬 12:30 · …   🎬 19:30 · …
    🖼️ 09:30 · <título> (<tipo>)   🖼️ 15:30 · …   🖼️ 21:30 · …
-   Responda "ok" ou o que mudar. Sem resposta até as 23h, produzo assim.
+   Tema por tendência: <motivo curto> · Produzo assim às 23h.
    ```
-7. Se ele responder: grave `estado.pauta: em_ajuste` ANTES de mexer; reescreva só os itens afetados; valide de novo; grave com `status: aprovada` e `estado.pauta: aprovada`; registre em `ajustes`; confirme em uma linha. Se o ÁUDIO já gerou a narração de um vídeo alterado, renomeie `vN\audio.json` para `audio_antigo.json`.
+7. Só se ele responder antes do ÁUDIO: grave `estado.pauta: em_ajuste` ANTES de mexer; reescreva só os itens afetados; valide de novo; grave com `status: aprovada` e `estado.pauta: aprovada`; registre em `ajustes`; confirme em uma linha. Se o ÁUDIO já gerou a narração de um vídeo alterado, renomeie `vN\audio.json` para `audio_antigo.json`.
 
 ## B. ÁUDIO (véspera, 23:07 e 00:07)
 Regra do Felipe (06/11): a narração tem que soar brasileira nativa. Nunca use voz desenhada do Voice Studio.
-1. Portão. `pauta` = `proposta` → grave `padrao`. Grave `audio: em_andamento`. Traga `audio_falas.py`.
+1. Portão. Grave `audio: em_andamento`. Traga `audio_falas.py`.
 2. Para cada vídeo sem `audio.json`, gere as 10 falas separadas (`reference/narracao.md`: motor principal Voice Studio por fila, reserva ElevenLabs). Arquivos em `run/vN/falas/01..10.mp3`.
 3. `python3 scripts/checar_audio.py run/vN/falas run/vN/narration.json --saida run/vN/falas/qa.json`. Refaça só as falas REFAZER (inclui arquivo ausente ou inválido), mesmos parâmetros, até 2 refações por fala. Depois disso, fique com a melhor e registre o aviso.
 4. `python3 audio_falas.py montar run/vN/falas run/vN/narration.json run/vN/narracao_sync.wav`.

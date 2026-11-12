@@ -51,6 +51,11 @@ Resultado esperado: Opus some do dia a dia. Sonnet escreve e olha. Haiku opera. 
 6. **Áudio sem navegador.** Dois caminhos: (a) `edge-tts`, gratuito e local, com voz pt-BR, elimina créditos e o download via navegador; (b) manter ElevenLabs, mas operado por Haiku. Vale testar (a) em um vídeo e comparar a voz.
 7. **Transcrição local.** faster-whisper no container substitui o Scribe do ElevenLabs na checagem de falas. Grátis, sem fila.
 
+## 4b. Pauta por tendência e impulsionamento (12/11)
+- **Tema do dia** vem da skill `tendencias`: o `pesquisador` consulta o vidIQ (vídeos fora da curva no Instagram e TikTok em português, buscas em alta) e grava `tendencias.json`; a trilha fixa vira reserva. Teste de 12/11 no nicho do Chefão trouxe 10 outliers brasileiros com gancho e formato; o modo de busca em alta em português veio fraco, por isso é secundário. Google Trends entra quando a rede liberar `trends.google.com`.
+- **Criação sem aprovação**: a pauta nasce final e segue para áudio e produção; o Felipe recebe um aviso e só intervém se quiser. Publicação continua com aprovação por padrão (`config/publicacao.json`), porque o agendamento no vidIQ é irreversível.
+- **Impulsionamento** pela skill `impulsionamento`: regras em `config/ads.json`, decisão em `scripts/impulsionar.py` (função pura testada), execução pela Marketing API da Meta e Spark Ads do TikTok, sempre em dry-run até existirem as chaves. Documento: `docs/impulsionamento.md`.
+
 ## 5. Ferramentas
 
 Verificado neste ambiente de nuvem em 2026-11-11. Para valer em toda sessão nova, os comandos de instalação precisam ir no script de setup do ambiente (menu do ambiente na barra de título da sessão, depois Editar).
