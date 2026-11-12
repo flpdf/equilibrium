@@ -1,0 +1,8 @@
+{
+ "id": "2026-11-10_chefao_v3",
+ "inicio": "2026-11-09T23:37:12",
+ "ok": true,
+ "codigo": 0,
+ "saida": "fala 01 versao 1: nota 0.8, 1.92s  | ouvido: 4 golpes e nenhuma guarda\nfala 02 versao 1: nota 0.9, 3.06s  | ouvido: Combo é para quem já treina, aqui controle vale mais.\nfala 03 versao 1: nota 0.43, 1.99s  | ouvido: Errum, aguarda ainda entre os golpes.\nfala 03 versao 2: nota 0.57, 2.08s  | ouvido: Errum, aguarda caindo entre os golpes.\nAVISO fala 03: melhor versao com nota 0.57\nfala 04 versao 1: nota 1.0, 2.47s  | ouvido: Cada mão volta pro rosto antes da próxima.\nfala 05 versao 1: nota 0.88, 2.25s  | ouvido: Erro 2, queixo subindo no meio do combo.\nfala 06 versao 1: nota 1.0, 2.35s  | ouvido: queixo baixo do primeiro ao último golpe.\nfala 07 versao 1: nota 0.75, 1.7s  | ouvido: Erro 3, base estreita.\nfala 08 versao 1: nota 0.83, 2.03s  | ouvido: Pesa afastados na largura do ombro.\nfala 09 versao 1: nota 1.0, 1.82s  | ouvido: Pronto! Combo desbloqueado!\nfala 10 versao 1: nota 1.0, 2.87s  | ouvido: Segue aí que o próximo chefão é a flexão de braço.\nfalas prontas: 10/10\n",
+ "fim": "2026-11-09T23:44:01"
+}
