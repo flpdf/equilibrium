@@ -12,7 +12,7 @@ Princípio: prompt de uma linha apontando para a skill do repositório; modelo d
 | Alerta SP – episódio do dia | 17:47 | Sonnet | Etapa A da skill `alerta-sp` para HOJE; no fim, `send_later` às 02:30 com "Etapa B (PRODUÇÃO) da skill `alerta-sp`". |
 | Publicações do dia (vidIQ) | 08:49 e 10:49 | Sonnet | Skill `publicacao`, para HOJE. |
 | Resumo matinal | 07:46, seg–sex | Sonnet | inalterado (`/morning`, engenharia civil) |
-| Impulsionamento (ads) | 12:17 e 20:17 | Sonnet | Skill `impulsionamento`, para HOJE. (criada em 12/11, desativada; conectores vidIQ e Metricool) |
+| Impulsionamento (ads) | 12:17 e 20:17 | Sonnet | Skill `impulsionamento`, para HOJE. Criada em 12/11, desativada. Ficou SEM conectores: esta conta não aceita conectores em tarefas criadas por sessão. Antes de ativar, adicione vidIQ, Metricool e Google Drive à tarefa na tela de tarefas agendadas do claude.ai. |
 
 Lembretes de story do Alerta SP (Dia 0, 1 e 2; 11–13/11, 20:55): desativados pelo Felipe; ficam até ele decidir se posta os stories.
 
