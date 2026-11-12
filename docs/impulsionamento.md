@@ -78,3 +78,4 @@ Cada registro tem `post_id`, `plataforma`, `canal`, `orcamento`, `duracao_dias`,
 
 
 Tutorial passo a passo da Meta (Instagram), com telas, ids e testes: `docs/tutorial-meta-ads.md`.
+Tutorial passo a passo do TikTok (Spark Ads): `docs/tutorial-tiktok-ads.md`.
