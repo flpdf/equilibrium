@@ -6,8 +6,8 @@ Objetivo: ao final, você terá quatro valores para colocar nos segredos do ambi
 |---|---|---|
 | `META_ACCESS_TOKEN` | token de usuário do sistema, não expira | Passo 5 |
 | `META_AD_ACCOUNT_ID` | conta de anúncios, formato `act_123456789` | Passo 2 |
-| `META_PAGE_ID` | id da Página do Facebook ligada ao Instagram | Passo 6 |
-| `META_IG_USER_ID` | id do perfil profissional do Instagram | Passo 6 |
+| `META_PAGE_ID` | id da Página do Facebook ligada ao Instagram | Passo 6 (opcional: já gravado em `config/ads.json`) |
+| `META_IG_USER_ID` | id do perfil profissional do Instagram | Passo 6 (opcional: já gravado em `config/ads.json`) |
 
 Os nomes dos menus da Meta mudam com frequência. Quando o nome não bater, procure a opção equivalente na mesma tela.
 

@@ -2,7 +2,10 @@
   "moeda": "BRL",
   "orcamento_diario_total": 30.0,
   "orcamento_semanal_total": 150.0,
-  "orcamento_por_post": {"min": 10.0, "max": 40.0},
+  "orcamento_por_post": {
+    "min": 10.0,
+    "max": 40.0
+  },
   "duracao_dias": 2,
   "max_posts_por_dia": 2,
   "janela_horas": 24,
@@ -13,14 +16,52 @@
     "retencao_min": null
   },
   "plataformas": {
-    "instagram": {"ativo": true, "objetivo": "seguidores"},
-    "tiktok": {"ativo": true, "objetivo": "visualizacoes"}
+    "instagram": {
+      "ativo": true,
+      "objetivo": "seguidores"
+    },
+    "tiktok": {
+      "ativo": true,
+      "objetivo": "visualizacoes"
+    }
   },
   "canais": {
-    "chefao": {"ativo": true, "peso": 1.0},
-    "se-acontecesse": {"ativo": true, "peso": 1.0},
-    "alerta-sp": {"ativo": false, "peso": 0.5}
+    "chefao": {
+      "ativo": true,
+      "peso": 1.0
+    },
+    "se-acontecesse": {
+      "ativo": true,
+      "peso": 1.0
+    },
+    "alerta-sp": {
+      "ativo": false,
+      "peso": 0.5
+    }
   },
-  "nunca_impulsionar": ["venda", "suplemento"],
-  "parar_se": {"cpm_max": 15.0, "custo_por_seguidor_max": 1.0}
+  "nunca_impulsionar": [
+    "venda",
+    "suplemento"
+  ],
+  "parar_se": {
+    "cpm_max": 15.0,
+    "custo_por_seguidor_max": 1.0
+  },
+  "meta_contas": {
+    "chefao": {
+      "page_id": "1506404455885952",
+      "instagram_user_id": "17841472492442815",
+      "instagram": "chefaodostreinos"
+    },
+    "se-acontecesse": {
+      "page_id": "1375020325705212",
+      "instagram_user_id": "17841453394645080",
+      "instagram": "eseacontecessse"
+    },
+    "alerta-sp": {
+      "page_id": "1542283755616421",
+      "instagram_user_id": "17841428163246077",
+      "instagram": "spoff.line"
+    }
+  }
 }

@@ -2,11 +2,14 @@
 
 Fluxo: campanha -> conjunto de anúncios -> criativo (reel existente) -> anúncio.
 Sem `confirmar`, nada é enviado: imprime os payloads exatos e não toca a rede.
-Variáveis: META_ACCESS_TOKEN, META_AD_ACCOUNT_ID (act_123), META_PAGE_ID, META_IG_USER_ID.
+Variáveis: META_ACCESS_TOKEN, META_AD_ACCOUNT_ID (act_123). Página e Instagram de cada canal vêm de
+config/ads.json → meta_contas; META_PAGE_ID e META_IG_USER_ID só como reserva.
 """
 from __future__ import annotations
 
 import json
+import os
+from pathlib import Path
 import urllib.parse
 from datetime import datetime, timedelta
 from typing import Any
@@ -15,7 +18,21 @@ from ads.comum import AdsError, chamar, mostrar, variaveis
 
 VERSAO = "v21.0"
 BASE = f"https://graph.facebook.com/{VERSAO}"
-VARS = ["META_ACCESS_TOKEN", "META_AD_ACCOUNT_ID", "META_PAGE_ID", "META_IG_USER_ID"]
+VARS = ["META_ACCESS_TOKEN", "META_AD_ACCOUNT_ID"]
+CONFIG = Path(__file__).resolve().parents[2] / "config" / "ads.json"
+
+
+def conta_do_canal(canal: str, config: Path = CONFIG) -> dict[str, str]:
+    """Página e Instagram do canal pelo config; reserva nas variáveis META_PAGE_ID/META_IG_USER_ID."""
+    try:
+        contas = json.loads(config.read_text(encoding="utf-8")).get("meta_contas", {})
+    except (OSError, ValueError):
+        contas = {}
+    conta = contas.get(canal, {})
+    return {
+        "page_id": conta.get("page_id") or os.environ.get("META_PAGE_ID") or "<META_PAGE_ID>",
+        "instagram_user_id": conta.get("instagram_user_id") or os.environ.get("META_IG_USER_ID") or "<META_IG_USER_ID>",
+    }
 
 # objetivo da plataforma (config) -> (objective, optimization_goal)
 OBJETIVOS = {
@@ -66,10 +83,7 @@ def payload_criativo(d: dict[str, Any], env: dict[str, str]) -> dict[str, Any]:
     midia = d.get("extra", {}).get("midia_id") or "<midia_id do reel>"
     return {
         "name": _nome(d),
-        "object_story_spec": {
-            "page_id": env["META_PAGE_ID"],
-            "instagram_user_id": env["META_IG_USER_ID"],
-        },
+        "object_story_spec": conta_do_canal(d.get("canal", "")),
         "source_instagram_media_id": midia,
     }
 
