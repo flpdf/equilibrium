@@ -4,6 +4,7 @@
 Uso:
   python3 impulsionar.py decidir metricas.json historico_ads.json [--config config/ads.json] [--agora ISO]
   python3 impulsionar.py avaliar historico_ads.json [--config config/ads.json]
+  python3 impulsionar.py midia metricas.json [--config config/ads.json]   # preenche midia_id (Instagram)
   python3 impulsionar.py executar decisoes.json [--plataforma instagram|tiktok] [--dry-run | --executar --confirmo]
 
 `decidir` e `avaliar_ativos` são funções puras (sem rede, sem relógio). `executar` é dry-run
@@ -238,18 +239,45 @@ def cmd_executar(a: argparse.Namespace) -> int:
     decisoes = [d for d in _ler(a.decisoes) if not a.plataforma or d["plataforma"] == a.plataforma]
     agora = datetime.now(timezone.utc)
     adaptadores = {"instagram": meta, "tiktok": tiktok}
-    registros = []
-    try:
-        for d in decisoes:
-            objetivo = config["plataformas"][d["plataforma"]]["objetivo"]
-            print(f"== {d['post_id']} ({d['plataforma']}) R$ {d['orcamento']:.0f} por {d['duracao_dias']} dias")
+    registros, pendentes = [], []
+    for d in decisoes:  # uma decisão com erro vira pendente; as outras seguem
+        objetivo = config["plataformas"][d["plataforma"]]["objetivo"]
+        print(f"== {d['post_id']} ({d['plataforma']}) R$ {d['orcamento']:.0f} por {d['duracao_dias']} dias")
+        try:
             registros.append(adaptadores[d["plataforma"]].criar(d, objetivo, agora, confirmar, config))
-    except AdsError as e:
-        print(f"Erro: {e}", file=sys.stderr)
-        _gravar_historico(a.historico, registros, agora, confirmar)
-        return 1
+        except AdsError as e:
+            print(f"PENDENTE {d['post_id']} ({d['plataforma']}): {e}", file=sys.stderr)
+            pendentes.append(d["post_id"])
     _gravar_historico(a.historico, registros, agora, confirmar)
     print("\nDry-run: nada foi criado." if not confirmar else f"\n{len(registros)} impulsionamento(s) criado(s), em pausa.")
+    if pendentes:
+        print(f"{len(pendentes)} pendente(s): {', '.join(pendentes)}", file=sys.stderr)
+        return 1
+    return 0
+
+
+def cmd_midia(a: argparse.Namespace) -> int:
+    """Preenche midia_id dos posts de Instagram em metricas.json pela Graph API (in place)."""
+    import os
+
+    from ads import meta
+    from ads.comum import AdsError
+
+    token = os.environ.get("META_ACCESS_TOKEN")
+    if not token:
+        print("Erro: META_ACCESS_TOKEN ausente.", file=sys.stderr)
+        return 2
+    posts = _ler(a.metricas)
+    try:
+        sem_par = meta.preencher_midia_ids(posts, _ler(a.config), token)
+    except AdsError as e:
+        print(f"Erro: {e}", file=sys.stderr)
+        return 1
+    Path(a.metricas).write_text(json.dumps(posts, ensure_ascii=False, indent=2), encoding="utf-8")
+    com = sum(1 for p in posts if p.get("plataforma") == "instagram" and p.get("midia_id"))
+    print(f"midia_id: {com} post(s) de Instagram com id.")
+    if sem_par:
+        print(f"Sem par (url não casou com nenhum reel da conta): {', '.join(sem_par)}", file=sys.stderr)
     return 0
 
 
@@ -288,6 +316,9 @@ def main(argv: list[str] | None = None) -> int:
     e.add_argument("--executar", action="store_true", help="cria de verdade (exige --confirmo)")
     e.add_argument("--confirmo", action="store_true")
     e.set_defaults(fn=cmd_executar)
+    m = sub.add_parser("midia")
+    m.add_argument("metricas"); m.add_argument("--config", default=str(CONFIG_PADRAO))
+    m.set_defaults(fn=cmd_midia)
     a = ap.parse_args(argv)
     if a.cmd == "executar" and a.dry_run and a.executar:
         ap.error("--dry-run e --executar são excludentes")

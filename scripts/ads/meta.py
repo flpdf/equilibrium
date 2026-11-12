@@ -9,6 +9,7 @@ META_IG_USER_ID no ambiente só servem de reserva para canal sem esse bloco.
 from __future__ import annotations
 
 import json
+import re
 import urllib.parse
 from datetime import datetime, timedelta
 from typing import Any
@@ -112,9 +113,49 @@ def _id(resp: dict[str, Any], etapa: str) -> str:
     return str(resp["id"])
 
 
+def codigo_post(url: str) -> str | None:
+    """Shortcode do link do Instagram (/reel/X/, /reels/X/, /p/X/, /tv/X/)."""
+    m = re.search(r"instagram\.com/(?:[^/?#]+/)?(?:reels?|p|tv)/([A-Za-z0-9_-]+)", url or "")
+    return m.group(1) if m else None
+
+
+def listar_midias(ig_user_id: str, token: str, limite: int = 50) -> list[dict[str, Any]]:
+    """Mídias recentes da conta (id, permalink, timestamp). Exige instagram_basic no token."""
+    q = urllib.parse.urlencode({"fields": "id,permalink,timestamp,media_product_type",
+                                "limit": limite, "access_token": token})
+    return chamar(f"{BASE}/{ig_user_id}/media?{q}", None, {}).get("data", [])
+
+
+def preencher_midia_ids(posts: list[dict[str, Any]], config: dict[str, Any], token: str,
+                        listar=listar_midias) -> list[str]:
+    """Põe `midia_id` nos posts de Instagram que não têm, casando o shortcode do `url`
+    com o permalink das mídias da conta do canal. Devolve os ids que ficaram sem par."""
+    faltam = [p for p in posts if p.get("plataforma") == "instagram" and not p.get("midia_id")]
+    cache: dict[str, dict[str, str]] = {}
+    sem_par = []
+    for p in faltam:
+        codigo = codigo_post(p.get("url", ""))
+        try:
+            ig = contas_do_canal(p, config, exigir=True)["ig_user_id"]
+        except AdsError:
+            sem_par.append(p.get("id", "?"))
+            continue
+        if ig not in cache:
+            cache[ig] = {c: str(m["id"]) for m in listar(ig, token)
+                         if (c := codigo_post(m.get("permalink", "")))}
+        if codigo and codigo in cache[ig]:
+            p["midia_id"] = cache[ig][codigo]
+        else:
+            sem_par.append(p.get("id", "?"))
+    return sem_par
+
+
 def criar(d: dict[str, Any], objetivo: str, agora: datetime, confirmar: bool,
           config: dict[str, Any] | None = None) -> dict[str, Any]:
     """Cria (ou simula) o anúncio. Devolve o registro para o historico_ads.json."""
+    if confirmar and not d.get("extra", {}).get("midia_id"):
+        raise AdsError(f"Post {d['post_id']}: sem midia_id do reel; rode `impulsionar.py midia` "
+                       "ou ponha midia_id em metricas.json")
     env = variaveis(VARS, exigir=confirmar)
     contas = contas_do_canal(d, config, exigir=confirmar)
     conta = env["META_AD_ACCOUNT_ID"]

@@ -217,3 +217,47 @@ def test_meta_canal_sem_ids_exige_ambiente(monkeypatch):
     monkeypatch.delenv("META_IG_USER_ID", raising=False)
     with pytest.raises(AdsError, match="novo"):
         meta.contas_do_canal({"canal": "novo"}, {"canais": {}}, exigir=True)
+
+
+def test_codigo_post():
+    for url in ("https://www.instagram.com/reel/DQx1_a-B/", "https://instagram.com/chefaodostreinos/reel/DQx1_a-B?igsh=1",
+                "https://www.instagram.com/p/DQx1_a-B/", "https://www.instagram.com/reels/DQx1_a-B/"):
+        assert meta.codigo_post(url) == "DQx1_a-B"
+    assert meta.codigo_post("https://tiktok.com/@x/video/1") is None
+
+
+def test_preencher_midia_ids_casa_pelo_shortcode():
+    cfg = json.loads((RAIZ / "config" / "ads.json").read_text(encoding="utf-8"))
+    chamadas = []
+
+    def listar(ig, token):
+        chamadas.append(ig)
+        return [{"id": "999", "permalink": "https://www.instagram.com/reel/ABC/"}]
+
+    posts = [{"id": "a", "canal": "chefao", "plataforma": "instagram", "url": "https://www.instagram.com/reel/ABC/?x=1"},
+             {"id": "b", "canal": "chefao", "plataforma": "instagram", "url": "https://www.instagram.com/reel/ZZZ/"},
+             {"id": "c", "canal": "chefao", "plataforma": "instagram", "midia_id": "1", "url": ""},
+             {"id": "d", "canal": "chefao", "plataforma": "tiktok", "url": ""}]
+    assert meta.preencher_midia_ids(posts, cfg, "t", listar=listar) == ["b"]
+    assert posts[0]["midia_id"] == "999" and posts[2]["midia_id"] == "1" and "midia_id" not in posts[3]
+    assert chamadas == ["17841472492442815"]  # uma consulta por conta
+
+
+def test_meta_sem_midia_id_falha_antes_da_rede(sem_rede):
+    from ads.comum import AdsError
+    sem = {**DEC, "extra": {}}
+    with pytest.raises(AdsError, match="midia_id"):
+        meta.criar(sem, "seguidores", AGORA, confirmar=True)
+
+
+def test_executar_pendente_nao_derruba_as_outras(sem_rede, tmp_path, capsys, monkeypatch):
+    for v in ("META_ACCESS_TOKEN", "META_AD_ACCOUNT_ID", "TIKTOK_ACCESS_TOKEN", "TIKTOK_ADVERTISER_ID"):
+        monkeypatch.setenv(v, "x")
+    criados = []
+    monkeypatch.setattr(tiktok, "criar", lambda d, *a, **k: criados.append(d["post_id"]) or
+                        {"post_id": d["post_id"], "plataforma": "tiktok", "dry_run": True})
+    f = tmp_path / "d.json"
+    f.write_text(json.dumps([{**DEC, "extra": {}}, {**DEC, "post_id": "b", "plataforma": "tiktok"}]))
+    rc = imp.main(["executar", str(f), "--executar", "--confirmo", "--historico", str(tmp_path / "h.json")])
+    assert rc == 1 and criados == ["b"]
+    assert "PENDENTE a (instagram)" in capsys.readouterr().err

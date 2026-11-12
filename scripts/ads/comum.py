@@ -36,9 +36,9 @@ def _mensagem_erro(corpo: bytes) -> str:
     return str(dados)[:300]
 
 
-def chamar(url: str, corpo: bytes, cabecalhos: dict[str, str], timeout: int = 30) -> dict[str, Any]:
-    """POST via urllib; devolve o JSON ou levanta AdsError com o error.message."""
-    req = urllib.request.Request(url, data=corpo, headers=cabecalhos, method="POST")
+def chamar(url: str, corpo: bytes | None, cabecalhos: dict[str, str], timeout: int = 30) -> dict[str, Any]:
+    """POST via urllib (GET se `corpo` for None); devolve o JSON ou levanta AdsError com o error.message."""
+    req = urllib.request.Request(url, data=corpo, headers=cabecalhos, method="GET" if corpo is None else "POST")
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             dados = json.loads(resp.read())

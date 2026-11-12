@@ -29,7 +29,7 @@ python3 scripts/impulsionar.py avaliar historico_ads.json                       
 
 Sem `--executar --confirmo` nada é enviado. Mesmo com confirmação, campanha, conjunto e anúncio nascem PAUSADOS: você revisa e ativa no Ads Manager.
 
-Em `metricas.json`, cada post pode ter `midia_id` (ID da mídia do reel no Instagram, necessário para a Meta) e `auth_code` (código Spark Ads, necessário para o TikTok). A decisão carrega esses campos em `extra`.
+Em `metricas.json`, cada post pode ter `midia_id` (ID da mídia do reel no Instagram, necessário para a Meta) e `auth_code` (código Spark Ads, necessário para o TikTok). A decisão carrega esses campos em `extra`. O `midia_id` não precisa ser copiado à mão: `python3 scripts/impulsionar.py midia metricas.json` busca na Graph API as mídias da conta do canal e preenche pelo link do post (`url`). No `executar`, uma decisão sem `midia_id` ou `auth_code` vira `PENDENTE` antes de qualquer chamada, e as demais seguem.
 
 ## O que o Felipe cria uma única vez
 
