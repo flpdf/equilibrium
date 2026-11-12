@@ -6,7 +6,7 @@ description: Etapa D diária, aprovação e agendamento das publicações do dia
 # Publicação do dia (vidIQ)
 
 Regras do Felipe, sempre:
-- Aprovação: `config/publicacao.json` → `aprovacao_obrigatoria`. Com `true` (padrão), nada é agendado sem "ok" dele nesta conversa. Com `false`, agende direto nos horários propostos e mande o resumo no lugar do pedido. O agendamento no vidIQ é irreversível, por isso a chave existe.
+- Aprovação: `config/publicacao.json` → `aprovacao_obrigatoria`. Com `false` (padrão desde 12/11, decisão do Felipe), agende direto nos horários propostos e mande o resumo no lugar do pedido. Com `true`, nada é agendado sem "ok" dele nesta conversa. O agendamento no vidIQ é irreversível, por isso a chave existe.
 - Nunca marcar como conteúdo de IA (TikTok `isAiGenerated: false`; Instagram sem selo).
 - Legenda completa e hashtags do kit. Remova só linhas que comecem com "⚠️" ou "TÍTULO:" ou contenham "Postar às" ou "gerado por IA".
 - Vídeos já saem com música mixada (`autoAddMusic: false`). Carrosséis do TikTok: `autoAddMusic: true`.
