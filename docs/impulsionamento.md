@@ -75,3 +75,6 @@ Cada registro tem `post_id`, `plataforma`, `canal`, `orcamento`, `duracao_dias`,
 - Os orçamentos diários resultantes (por exemplo R$ 5 por dia) podem ficar abaixo do mínimo diário que a plataforma aceita; nesse caso a API devolve erro e o script mostra a mensagem.
 - Nada coleta métricas de anúncios nem para campanhas sozinho: `metricas.json` e os números dos `ativos` vêm de fora (vidIQ, Windsor, exportação).
 - "Retorno financeiro" não é medido aqui: os vídeos não vendem direto, então a regra otimiza views e seguidores e limita o custo (CPM, custo por seguidor).
+
+
+Tutorial passo a passo da Meta (Instagram), com telas, ids e testes: `docs/tutorial-meta-ads.md`.
